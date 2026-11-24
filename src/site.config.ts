@@ -11,7 +11,7 @@ export const site = {
   taglineEn: 'Field notes on training small models.',
   description:
     '一本开源手册：记录训练小模型时的第一手观察，并汇总文献里可复用的经验。按模型结构组织，从分词器一路到量化部署。',
-  repo: 'https://github.com/Skystellan/otter-handbook',
+  repo: 'https://github.com/OtterLLM/otter-handbook',
   author: 'Skystellan',
   /** 文字内容 CC BY 4.0（见 LICENSE-CONTENT），代码 MIT（见 LICENSE） */
   license: '文字 CC BY 4.0 · 代码 MIT',

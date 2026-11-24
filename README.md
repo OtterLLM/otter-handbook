@@ -2,7 +2,7 @@
 
 自己踩过的坑，别人走通的路。一本记录训练小模型经验的开源手册：第一手观察，加上文献里可复用的结论，按模型结构从分词器一路组织到量化部署。
 
-在线阅读：<https://skystellan.github.io/otter-handbook/>
+在线阅读：<https://otterllm.github.io/otter-handbook/>
 
 ## 跑起来
 

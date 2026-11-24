@@ -10,7 +10,7 @@ import { figures } from './src/lib/markdown/figures.mjs';
 const base = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
-  site: process.env.SITE_URL ?? 'https://skystellan.github.io',
+  site: process.env.SITE_URL ?? 'https://otterllm.github.io',
   base,
   trailingSlash: 'always',
   devToolbar: { enabled: false },
