@@ -17,5 +17,5 @@ We suggest writing an observation in four parts:
 4. **Possible explanation**: write a guess as a guess, and say which experiment is still missing to confirm it.
 
 :::obs[Write the title as a falsifiable sentence]
-For example, "After changing X from a to b, validation loss is lower before step N and flat afterward", rather than "X matters".
+For example, "After changing X from a to b, validation loss is lower before step N and on par afterward", rather than "X matters".
 :::

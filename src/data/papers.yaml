@@ -70,7 +70,7 @@
   year: 2025
   url: https://arxiv.org/abs/2507.17702
   components: [ffn]
-  takeaway: "Activation ratio A is the main lever of MoE efficiency (monotonic power law); expert granularity G is flat-optimal at 8-12, and one shared expert suffices. However, the optimal MoE batch size is markedly larger than for a dense model at equal compute."
+  takeaway: "Activation ratio A is the main effect on MoE efficiency leverage (monotonic power law); expert granularity G is flat-optimal at 8-12, and one shared expert suffices. However, the optimal MoE batch size is markedly larger than for a dense model at equal compute."
   takeaway_zh: 激活比 A 是 MoE 效率杠杆的主效应（幂律单调），专家粒度 G 在 8–12 呈平坦最优，共享专家给 1 个即可；但 MoE 最优 batch size 显著大于同算力 dense。
 
 - id: kimi-k2-2025
@@ -97,7 +97,7 @@
   year: 2026
   url: https://arxiv.org/abs/2609.08690
   components: [ffn, optimizer, schedule]
-  takeaway: "From 1,800 experiments, gives power-law corrections of the optimal hyperparameters to sparsity under Muon (peak lr ∝ A^0.136, optimal batch ∝ A^-0.084), quantifying the hyperparameter drift caused by noisier per-expert gradients as sparsity grows."
+  takeaway: "From 1,800 experiments, gives power-law corrections to the optimal hyperparameters as a function of sparsity under Muon (peak lr ∝ A^0.136, optimal batch ∝ A^-0.084), quantifying the hyperparameter drift caused by noisier per-expert gradients as sparsity grows."
   takeaway_zh: 用 1800 次实验给出 Muon 下稀疏度对最优超参的幂律修正（峰值 lr ∝ A^0.136、最优 batch ∝ A^-0.084），量化了越稀疏单专家梯度噪声越大带来的超参漂移。
 
 - id: su2021

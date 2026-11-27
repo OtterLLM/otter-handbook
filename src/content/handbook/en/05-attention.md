@@ -6,7 +6,7 @@ label: ATTENTION
 en: "Attention & sequence mixing"
 hint: "mla"
 variants: "full  sparse  linear  hybrid"
-blurb: "Where tokens exchange information: from full attention to sparse and linear variants, and mixtures of the two."
+blurb: "Where tokens exchange information: from full attention to sparse and linear variants, and on to hybrids that mix several kinds."
 status: draft
 progress: 0.25
 categories:

@@ -261,7 +261,7 @@ const en: Ui = {
     offmapLabel: 'Six things a flat diagram can’t hold',
     contentsTitle: 'Nineteen chapters, three parts',
     contentsLead:
-      'From the tokenizer all the way to quantized deployment. Each chapter is a box on the map; the status is honest — most chapters are not started yet, and get written as far as they get.',
+      'From the tokenizer all the way to quantized deployment. Each chapter is a box on the map; the status is honest — most chapters have not been started yet, and they are written as we go.',
     notesTitle: 'Recently noted',
     notesLead: 'A running log in time order: phenomena observed, conclusions read, pitfalls hit. Every entry hangs under the chapter it belongs to.',
     legendTitle: 'Five kinds of annotation, told apart at a glance',

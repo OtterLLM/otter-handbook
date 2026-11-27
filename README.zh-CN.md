@@ -104,6 +104,10 @@ src/
 ├── components/Hero.astro   封面
 ├── components/Atlas.astro  架构图 + 检视面板
 ├── components/ChapterList.astro  目录
+├── content/handbook/       en/ 与 zh/ 两份章节（文件名相同）+ 共享 img/
+├── content/notes/          en/ 与 zh/ 两份观察（文件名相同）+ 共享 img/
+├── data/papers.yaml        文献库（takeaway / takeaway_zh）
+├── i18n/                   界面文字词典
 ├── styles/                 base（设计系统）· hero · atlas · home · inner · prose
 └── pages/                  首页 / 手册 / 观察 / 文献 / 关于 / 404 / lab
 ```
