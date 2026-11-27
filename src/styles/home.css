@@ -151,6 +151,11 @@
   color: var(--ink-3);
 }
 
+/* 「仅英文 / Chinese only」：行里已有 gap，不再另加左边距 */
+.row-title .note-sample {
+  margin-left: 0;
+}
+
 .row:hover .row-title b {
   color: var(--accent-ink);
 }

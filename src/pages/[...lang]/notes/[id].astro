@@ -5,7 +5,8 @@ import '../../../styles/prose.css';
 import '../../../styles/inner.css';
 import Base from '../../../layouts/Base.astro';
 import FallbackNotice from '../../../components/FallbackNotice.astro';
-import { contentLangAttr, fmtDate, getChapters, getNotes, isVisibleNote, pad2 } from '../../../lib/handbook';
+import Relang from '../../../components/Relang.astro';
+import { contentLangAttr, fmtDate, getChapters, getNotes, pad2 } from '../../../lib/handbook';
 import { kinds } from '../../../site.config';
 import { url } from '../../../lib/url';
 import { getLang, langParam, langs, t } from '../../../i18n';
@@ -13,8 +14,7 @@ import { getLang, langParam, langs, t } from '../../../i18n';
 export async function getStaticPaths() {
   const out = [];
   for (const l of langs) {
-    const notes = (await getNotes(l)).filter(isVisibleNote);
-    for (const note of notes) out.push({ params: { lang: langParam(l), id: note.id }, props: { note } });
+    for (const note of await getNotes(l)) out.push({ params: { lang: langParam(l), id: note.id }, props: { note } });
   }
   return out;
 }
@@ -62,7 +62,7 @@ const linked = note.data.components.map((id) => chapters[id]).filter((c) => c !=
   <section class="band">
     <div class="wrap">
       <article class="prose page-body" lang={cl} style="--chapter:'§'">
-        <Content />
+        <Relang from={note.contentLang} to={lang}><Content /></Relang>
       </article>
     </div>
   </section>

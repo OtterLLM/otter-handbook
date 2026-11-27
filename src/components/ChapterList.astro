@@ -44,6 +44,7 @@ const groups = groupByPart(chapters, lang);
                 <span class="row-title">
                   <b lang={c.fallback ? contentLangAttr(c.contentLang) : undefined} style={named ? `view-transition-name:ch-${c.id}` : undefined}>{c.data.title}</b>
                   {subtitle(c) && <i lang={subtitle(c)!.lang}>{subtitle(c)!.text}</i>}
+                  {c.fallback && <span class="note-sample">{text.common.fallbackTag}</span>}
                 </span>
                 <span class="row-blurb" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.blurb}</span>
                 <span class="row-meta">

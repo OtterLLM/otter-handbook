@@ -193,6 +193,11 @@
   fill: var(--ink-3);
 }
 
+/* 这一格是按两到五个字的中文标题排的，英文标题长得多，字号收小一点（INFERENCE · Inference & sampling 才放得下） */
+.atlas .node:not(.node-text) .n-zh:lang(en) {
+  font-size: 11px;
+}
+
 /* ── 框：每一个都是一章的入口 ── */
 
 .atlas .node rect {

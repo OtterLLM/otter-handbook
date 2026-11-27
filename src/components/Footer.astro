@@ -1,5 +1,5 @@
 ---
-import { parts, site } from '../site.config';
+import { parts, site, type PartKey } from '../site.config';
 import { url } from '../lib/url';
 import { t, type Lang } from '../i18n';
 
@@ -18,7 +18,7 @@ const text = t(lang);
       <div>
         <h3 class="label">{text.footer.handbook}</h3>
         <ul>
-          {Object.entries(parts).map(([key, p]) => <li><a href={url('/handbook/', lang)}>{p.no} · {text.parts[key].title}</a></li>)}
+          {(Object.entries(parts) as [PartKey, (typeof parts)[PartKey]][]).map(([key, p]) => <li><a href={url('/handbook/', lang)}>{p.no} · {text.parts[key].title}</a></li>)}
         </ul>
       </div>
       <div>

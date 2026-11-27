@@ -15,7 +15,8 @@ import '../../../styles/inner.css';
 import Base from '../../../layouts/Base.astro';
 import Atlas from '../../../components/Atlas.astro';
 import FallbackNotice from '../../../components/FallbackNotice.astro';
-import { contentLangAttr, fmtDate, getChapters, getNotes, getOutline, isVisibleNote, pad2, subtitle } from '../../../lib/handbook';
+import Relang from '../../../components/Relang.astro';
+import { contentLangAttr, fmtDate, getChapters, getNotes, getOutline, pad2, subtitle } from '../../../lib/handbook';
 import { kinds, parts } from '../../../site.config';
 import { url } from '../../../lib/url';
 import { getLang, langParam, langs, t } from '../../../i18n';
@@ -49,7 +50,7 @@ const hasBody = (chapter.body ?? '').trim().length > 0;
 const outline = await getOutline(chapter);
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
-const notes = (await getNotes(lang)).filter((n) => isVisibleNote(n) && n.data.components.includes(chapter.id));
+const notes = (await getNotes(lang)).filter((n) => n.data.components.includes(chapter.id));
 const papers = (await getCollection('papers', (p) => p.data.components.includes(chapter.id))).sort(
   (a, b) => a.data.year - b.data.year,
 );
@@ -120,7 +121,7 @@ const source = `src/content/handbook/${lang}/${no}-${chapter.id}.md`;
         {
           hasBody ? (
             <div class="prose" lang={cl} style={`--chapter:'${no}'`} data-prose>
-              <Content />
+              <Relang from={chapter.contentLang} to={lang}><Content /></Relang>
             </div>
           ) : (
             <div class="empty">

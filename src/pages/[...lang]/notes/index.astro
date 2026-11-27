@@ -3,7 +3,7 @@
 import '../../../styles/home.css';
 import '../../../styles/inner.css';
 import Base from '../../../layouts/Base.astro';
-import { contentLangAttr, fmtDate, getNotes, isVisibleNote, pad2 } from '../../../lib/handbook';
+import { contentLangAttr, fmtDate, getNotes, pad2 } from '../../../lib/handbook';
 import { kinds } from '../../../site.config';
 import { url } from '../../../lib/url';
 import { getLang, langParams, t } from '../../../i18n';
@@ -15,7 +15,7 @@ export function getStaticPaths() {
 const lang = getLang(Astro.params.lang);
 const text = t(lang);
 const tx = text.notes;
-const notes = (await getNotes(lang)).filter(isVisibleNote);
+const notes = await getNotes(lang);
 ---
 
 <Base lang={lang} title={tx.title} description={tx.description}>

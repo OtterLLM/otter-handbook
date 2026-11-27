@@ -66,7 +66,7 @@ $$
 
 - **图片**放在共享的 `img/` 文件夹里（章节用 `src/content/handbook/img/`，笔记用 `src/content/notes/img/`），中英文两个版本都用 `../img/文件名` 引用。构建时会自动压缩成 webp。单独成段的图片按正文宽度居中显示；引号里的文字是图注，带图注的图会自动编号为 FIG. 01、02 等。
 - **公式**用 KaTeX，在构建时渲染，支持 `aligned`、`cases` 等环境。
-- **站内链接和 `public/` 里的文件**都从 `/` 开始写，部署到 GitHub Pages 时会自动补上 `/otter-handbook/`（见 `src/lib/markdown/base-path.mjs`）。
+- **站内链接和 `public/` 里的文件**都从 `/` 开始写，部署到 GitHub Pages 时会自动补上 `/otter-handbook/`（见 `src/lib/markdown/base-path.mjs`）。在 `zh/` 下的文件里，指向站内页面（`/handbook`、`/notes`、`/papers`、`/about`、`/lab`、`/`）的链接还会自动加上 `/zh` 前缀；图片等资源不会。某一页回退显示另一种语言的正文时，这些链接仍指向这一页所在语言的页面。
 - 也支持表格、代码高亮、脚注 `[^1]`、任务列表 `- [x]`、删除线 `~~…~~`，以及 `<details>`、`<video>` 等原生 HTML。
 - **不支持的**：Mermaid 流程图（只会当成代码显示），以及在 HTML 标签里用 `../img/` 这类相对路径引用图片（要插图请用 Markdown 的 `![]()` 写法）。
 

@@ -364,6 +364,7 @@ main {
 
 .header-tools {
   display: flex;
+  flex-shrink: 0;
   gap: 4px;
 }
 
@@ -432,6 +433,13 @@ html[lang='en'] .prose h2 {
   letter-spacing: -0.005em;
 }
 
+/* 英文副标题（The small-model training handbook）比「小模型训练手册」宽两倍多：页头一行放得下之前先不显示 */
+@media (max-width: 1100px) {
+  html[lang='en'] .brand-sub {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
   .brand-sub,
   .nav-i {
@@ -481,7 +489,6 @@ html[lang='en'] .prose h2 {
 
   .header-tools {
     gap: 0;
-    flex-shrink: 0;
   }
 
   .header-tools .tool:not([data-theme-toggle]) {

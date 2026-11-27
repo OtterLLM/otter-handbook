@@ -7,7 +7,7 @@ import Base from '../../layouts/Base.astro';
 import Hero from '../../components/Hero.astro';
 import Atlas from '../../components/Atlas.astro';
 import ChapterList from '../../components/ChapterList.astro';
-import { contentLangAttr, fmtDate, getChapters, getNotes, isVisibleNote, pad2 } from '../../lib/handbook';
+import { contentLangAttr, fmtDate, getChapters, getNotes, pad2 } from '../../lib/handbook';
 import { kinds, site } from '../../site.config';
 import { getOffmap } from '../../data/offmap';
 import { url } from '../../lib/url';
@@ -21,7 +21,7 @@ const lang = getLang(Astro.params.lang);
 const text = t(lang);
 const offmap = getOffmap(lang);
 const chapters = await getChapters(lang);
-const notes = (await getNotes(lang)).filter(isVisibleNote);
+const notes = await getNotes(lang);
 const papers = await getCollection('papers');
 ---
 

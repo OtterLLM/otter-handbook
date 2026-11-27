@@ -65,7 +65,7 @@ Put long logs, full configs, and derivation details here; collapsed by default.
 
 - **Images** go in the shared `img/` folder (`src/content/handbook/img/` for chapters, `src/content/notes/img/` for notes) and are referenced as `../img/<file>` from both the English and Chinese versions. They are compressed to webp at build time. An image alone in its paragraph is centered at body width; the quoted text is the caption, and captioned images are numbered automatically as FIG. 01, 02, and so on.
 - **Equations** use KaTeX, rendered at build time, and support environments such as `aligned` and `cases`.
-- **Internal links and files in `public/`** are written starting from `/`; when deployed to GitHub Pages, `/otter-handbook/` is prepended automatically (see `src/lib/markdown/base-path.mjs`).
+- **Internal links and files in `public/`** are written starting from `/`; when deployed to GitHub Pages, `/otter-handbook/` is prepended automatically (see `src/lib/markdown/base-path.mjs`). In files under `zh/`, links to site pages (`/handbook`, `/notes`, `/papers`, `/about`, `/lab`, `/`) also get `/zh` prepended automatically; images and other assets do not. On a page that falls back to the other language's text, these links still point to pages in the page's own language.
 - Also supported: tables, code highlighting, footnotes `[^1]`, task lists `- [x]`, strikethrough `~~...~~`, and native HTML such as `<details>` and `<video>`.
 - **Not supported**: Mermaid diagrams (shown as plain code), and referencing images by relative path such as `../img/` inside HTML tags (use Markdown's `![]()` syntax for figures).
 

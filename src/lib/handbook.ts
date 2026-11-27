@@ -78,10 +78,14 @@ export function subtitle(c: Chapter): { text: string; lang?: string } | undefine
   return c.zhTitle ? { text: c.zhTitle, lang: 'zh-CN' } : undefined;
 }
 
-/** All notes (drafts included; filter with isVisibleNote), newest first. */
+/**
+ * All visible notes (see isVisibleNote), newest first. Drafts are dropped per language *before* merging,
+ * so a draft translation falls back to the other language (with the FallbackNotice) instead of leaving
+ * a 404 behind the language switch / hreflang.
+ */
 export async function getNotes(lang: Lang): Promise<Note[]> {
   const [en, zh] = await Promise.all([getCollection('notes'), getCollection('notesZh')]);
-  return merge<NoteEntry>(en, zh, lang)
+  return merge<NoteEntry>(en.filter(isVisibleNote), zh.filter(isVisibleNote), lang)
     .map(({ id, entry, contentLang, fallback }) => ({ id, data: entry.data, entry, contentLang, fallback }))
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }

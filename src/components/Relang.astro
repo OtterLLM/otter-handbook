@@ -1,0 +1,32 @@
+---
+/**
+ * Wraps rendered markdown. Page links inside it carry the language of the folder the file comes from
+ * (base-path.mjs adds `/zh` to links in `zh/` files). On a fallback page the text is from the other
+ * language, so those links are re-pointed at the page's own language tree; otherwise nothing changes.
+ *
+ * props
+ *   from  language the text is written in (`contentLang`)
+ *   to    language of the page
+ */
+import type { Lang } from '../i18n';
+
+interface Props {
+  from: Lang;
+  to: Lang;
+}
+
+const { from, to } = Astro.props;
+
+let html = '';
+if (from !== to) {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const re = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Same set of page links as base-path.mjs: /handbook… /notes… /papers… /about… /lab… and the home page.
+  // Only the `href` of `<a>` tags is touched (in text and code samples `<` is escaped, so they never match).
+  const page = String.raw`(?:handbook|notes|papers|about|lab)(?:/|\2)|\2`;
+  const link = new RegExp(String.raw`(<a\b[^>]*?\shref\s*=\s*(["']))${re}${to === 'zh' ? '' : '/zh'}/(?=${page})`, 'g');
+  html = (await Astro.slots.render('default')).replace(link, (_, lead: string) => `${lead}${base}${to === 'zh' ? '/zh' : ''}/`);
+}
+---
+
+{from === to ? <slot /> : <Fragment set:html={html} />}
