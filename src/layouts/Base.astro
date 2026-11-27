@@ -11,15 +11,25 @@ import monoBold from 'jetbrains-mono/fonts/webfonts/JetBrainsMonoNL-Bold.woff2?u
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { site } from '../site.config';
-import { url } from '../lib/url';
+import { url, stripLang } from '../lib/url';
+import { htmlLang, t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   title?: string;
   description?: string;
+  /** Path (language-neutral, no base) the language switch links to. Defaults to the current page. */
+  switchPath?: string;
+  /** Emit hreflang alternates (off for the 404 page) */
+  alternates?: boolean;
 }
 
-const { title, description = site.description } = Astro.props;
-const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.nameZh}`;
+const { lang, title, description, alternates = true } = Astro.props;
+const text = t(lang);
+const desc = description ?? text.site.description;
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${text.site.nameSub}`;
+const path = Astro.props.switchPath ?? stripLang(Astro.url.pathname);
+const abs = (l: Lang) => new URL(url(path, l), Astro.site).href;
 
 const face = (weight: number, src: string) =>
   `@font-face{font-family:"JetBrains Mono NL";font-style:normal;font-weight:${weight};font-display:swap;src:url("${src}") format("woff2")}`;
@@ -27,15 +37,26 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang={htmlLang[lang]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={desc} />
     <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content={lang === 'zh' ? 'zh_CN' : 'en_US'} />
+    <meta property="og:locale:alternate" content={lang === 'zh' ? 'en_US' : 'zh_CN'} />
+    {
+      alternates && (
+        <>
+          <link rel="alternate" hreflang="en" href={abs('en')} />
+          <link rel="alternate" hreflang="zh-CN" href={abs('zh')} />
+          <link rel="alternate" hreflang="x-default" href={abs('en')} />
+        </>
+      )
+    }
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#f5f2e9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)" />
@@ -43,7 +64,7 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
     <link rel="preload" as="font" type="font/woff2" href={monoRegular} crossorigin />
     <style is:inline set:html={fontCss}></style>
     <script is:inline>
-      // 在首帧之前定好主题，避免闪一下。没选过就跟随系统
+      // Set the theme before first paint to avoid a flash; follow the system if none was chosen
       (function () {
         var root = document.documentElement;
         var theme = null;
@@ -59,12 +80,12 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
     </script>
   </head>
   <body>
-    <a class="sr-only" href="#main">跳到正文</a>
-    <Header />
+    <a class="sr-only" href="#main">{text.header.skip}</a>
+    <Header lang={lang} switchPath={path} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer lang={lang} />
 
     <script>
       // 明暗主题：点一下换一种，记住选择

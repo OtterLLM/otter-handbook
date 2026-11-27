@@ -10,22 +10,20 @@
 import { fmtDate, pad2 } from '../lib/handbook';
 import { site } from '../site.config';
 import { url } from '../lib/url';
+import { t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   chapters: number;
   notes: number;
   papers: number;
   latest?: Date;
 }
 
-const { chapters, notes, papers, latest } = Astro.props;
+const { lang, chapters, notes, papers, latest } = Astro.props;
+const text = t(lang);
 
-const modes = [
-  { id: 'halftone', zh: '网点', slug: '双色网点 · K 45° + B 15° · 4 px' },
-  { id: 'ascii', zh: '字符', slug: '字符 · 十级 · 4 × 8 px' },
-  { id: 'dither', zh: '抖动', slug: '有序抖动 · Bayer 4×4 · 2 px' },
-  { id: 'photo', zh: '原片', slug: '原片 · 光线步进 · 没过印刷机' },
-];
+const modes = (['halftone', 'ascii', 'dither', 'photo'] as const).map((id) => ({ id, ...text.hero.modes[id] }));
 ---
 
 <section class="hero" data-hero>
@@ -36,7 +34,7 @@ const modes = [
   <div class="wrap hero-wrap">
     <p class="hero-kicker label">
       <span class="blip" aria-hidden="true"></span>
-      {site.version} · 持续更新中{latest && ` · ${fmtDate(latest)}`}
+      {site.version} · {text.hero.kicker}{latest && ` · ${fmtDate(latest)}`}
     </p>
 
     <h1 class="hero-title">
@@ -44,17 +42,17 @@ const modes = [
         {[...site.name].map((ch, i) => <span style={`--i:${i}`} aria-hidden="true">{ch}</span>)}
       </span>
     </h1>
-    <p class="hero-zh">{site.nameZh}</p>
-    <p class="hero-en">{site.taglineEn}</p>
-    <p class="hero-lead">{site.tagline}记录训练小模型时的第一手观察，也汇总文献里能复用的经验。</p>
+    <p class="hero-zh">{text.site.nameSub}</p>
+    <p class="hero-en">{text.site.taglineEn}</p>
+    <p class="hero-lead">{text.site.tagline}{lang === 'en' ? ' ' : ''}{text.hero.lead}</p>
 
     <div class="hero-cta">
-      <a class="btn btn-primary" href={url('/handbook/')}>
-        开始阅读
+      <a class="btn btn-primary" href={url('/handbook/', lang)}>
+        {text.hero.start}
         <span class="arr">→</span>
       </a>
       <a class="btn" href="#atlas">
-        先看地图
+        {text.hero.map}
         <span class="arr">↓</span>
       </a>
     </div>
@@ -62,14 +60,14 @@ const modes = [
 
   <div class="wrap hero-foot">
     <p class="label hero-count">
-      <b>{pad2(chapters)}</b> 章 · <b>{pad2(notes)}</b> 条观察 · <b>{pad2(papers)}</b> 篇文献
+      <b>{pad2(chapters)}</b> {text.hero.countChapters} · <b>{pad2(notes)}</b> {text.hero.countNotes} · <b>{pad2(papers)}</b> {text.hero.countPapers}
     </p>
 
-    <div class="modes" role="radiogroup" aria-label="这张画怎么印" data-no-ripple>
+    <div class="modes" role="radiogroup" aria-label={text.hero.modesAria} data-no-ripple>
       {
         modes.map((m, i) => (
           <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-mode={m.id} data-slug={m.slug}>
-            {m.zh}
+            {m.name}
           </button>
         ))
       }
@@ -81,7 +79,7 @@ const modes = [
     </p>
   </div>
 
-  <p class="label hero-hint" aria-hidden="true">点一下水面试试 ↗</p>
+  <p class="label hero-hint" aria-hidden="true">{text.hero.hint}</p>
 </section>
 
 <script>

@@ -8,18 +8,20 @@
  *   named    给每个标题起一个「换页动画」用的名字，点进去的时候标题会从这一行长到章节页的大标题上。
  *            同一页上同一章只能有一处起名，所以一页里放了两份目录的话，第二份要关掉
  */
-import { groupByPart, pad2, type Chapter } from '../lib/handbook';
-import { statusLabel } from '../site.config';
+import { contentLangAttr, groupByPart, pad2, subtitle, type Chapter } from '../lib/handbook';
 import { url } from '../lib/url';
+import { t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   chapters: Chapter[];
   current?: string;
   named?: boolean;
 }
 
-const { chapters, current, named = true } = Astro.props;
-const groups = groupByPart(chapters);
+const { lang, chapters, current, named = true } = Astro.props;
+const text = t(lang);
+const groups = groupByPart(chapters, lang);
 ---
 
 <div class="toc" data-toc>
@@ -29,7 +31,7 @@ const groups = groupByPart(chapters);
         <header class="part-head">
           <span class="part-no">{g.no}</span>
           <div>
-            <h3>{g.zh}</h3>
+            <h3>{g.title}</h3>
             <p class="label">{g.en}</p>
           </div>
           <p class="part-lead">{g.lead}</p>
@@ -37,15 +39,15 @@ const groups = groupByPart(chapters);
         <ol class="rows">
           {g.chapters.map((c) => (
             <li>
-              <a class="row" href={url(`/handbook/${c.id}/`)} data-peek={c.id} aria-current={c.id === current ? 'page' : undefined}>
+              <a class="row" href={url(`/handbook/${c.id}/`, lang)} data-peek={c.id} data-peek-label={c.contentLang === 'zh' ? c.data.en : c.data.title} aria-current={c.id === current ? 'page' : undefined}>
                 <span class="row-no">{pad2(c.data.order)}</span>
                 <span class="row-title">
-                  <b style={named ? `view-transition-name:ch-${c.id}` : undefined}>{c.data.title}</b>
-                  <i>{c.data.en}</i>
+                  <b lang={c.fallback ? contentLangAttr(c.contentLang) : undefined} style={named ? `view-transition-name:ch-${c.id}` : undefined}>{c.data.title}</b>
+                  {subtitle(c) && <i lang={subtitle(c)!.lang}>{subtitle(c)!.text}</i>}
                 </span>
-                <span class="row-blurb">{c.data.blurb}</span>
+                <span class="row-blurb" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.blurb}</span>
                 <span class="row-meta">
-                  <span class="status" data-status={c.data.status}>{statusLabel[c.data.status]}</span>
+                  <span class="status" data-status={c.data.status}>{text.status[c.data.status]}</span>
                   <span class="meter" style={`--p:${c.data.progress}`} />
                 </span>
                 <span class="row-arr" aria-hidden="true">→</span>
@@ -84,7 +86,7 @@ const groups = groupByPart(chapters);
       row.addEventListener('pointerenter', () => {
         id = row.dataset.peek ?? '';
         if (!hasFig(id)) return;
-        label.textContent = row.querySelector('i')?.textContent ?? '';
+        label.textContent = row.dataset.peekLabel ?? '';
         card.classList.add('is-on');
         drawFig(canvas, id, performance.now() / 1000);
         if (!raf) raf = requestAnimationFrame(tick);

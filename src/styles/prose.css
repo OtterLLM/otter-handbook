@@ -29,6 +29,13 @@
   -webkit-text-emphasis-position: under right;
 }
 
+/* English text keeps real italics (the :lang() is set on the prose block, also for zh fallback text) */
+.prose:lang(en) em {
+  font-style: italic;
+  text-emphasis: none;
+  -webkit-text-emphasis: none;
+}
+
 .prose a {
   text-decoration: underline;
   text-decoration-color: var(--rule-2);

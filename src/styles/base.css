@@ -389,6 +389,49 @@ main {
   height: 16px;
 }
 
+/* 语言切换：EN / 中文，当前语言高亮；两个链接指向同一页的两种语言 */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-switch a {
+  padding: 5px 9px 4px;
+  font: 500 11px / 1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.lang-switch a + a {
+  border-left: 1px solid var(--rule-2);
+}
+
+.lang-switch a:hover {
+  color: var(--accent-ink);
+}
+
+.lang-switch a[aria-current] {
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+}
+
+/* 英文站：Instrument Serif 只有常规字重，不要合成粗体；标题的字距也收回来 */
+html[lang='en'] {
+  font-synthesis-weight: none;
+}
+
+html[lang='en'] .ph h1,
+html[lang='en'] .prose h2 {
+  letter-spacing: -0.005em;
+}
+
 @media (max-width: 760px) {
   .brand-sub,
   .nav-i {
@@ -397,6 +440,52 @@ main {
 
   .nav a {
     padding-inline: 6px;
+  }
+
+  .lang-switch {
+    margin-right: 0;
+  }
+
+  .lang-switch a {
+    padding-inline: 6px;
+  }
+}
+
+/* 窄屏：页头一行放不下就收一收 —— 只留图标、导航可横向滑动、GitHub 图标让位给语言切换 */
+@media (max-width: 560px) {
+  .site-header .wrap {
+    gap: 8px;
+  }
+
+  .brand-name {
+    display: none;
+  }
+
+  .nav {
+    flex: 1;
+    min-width: 0;
+    margin-left: 0;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav a {
+    padding-inline: 5px;
+    font-size: 13px;
+  }
+
+  .header-tools {
+    gap: 0;
+    flex-shrink: 0;
+  }
+
+  .header-tools .tool:not([data-theme-toggle]) {
+    display: none;
   }
 }
 

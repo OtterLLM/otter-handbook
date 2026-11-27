@@ -1,0 +1,69 @@
+---
+import { render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import '../../../styles/prose.css';
+import '../../../styles/inner.css';
+import Base from '../../../layouts/Base.astro';
+import FallbackNotice from '../../../components/FallbackNotice.astro';
+import { contentLangAttr, fmtDate, getChapters, getNotes, isVisibleNote, pad2 } from '../../../lib/handbook';
+import { kinds } from '../../../site.config';
+import { url } from '../../../lib/url';
+import { getLang, langParam, langs, t } from '../../../i18n';
+
+export async function getStaticPaths() {
+  const out = [];
+  for (const l of langs) {
+    const notes = (await getNotes(l)).filter(isVisibleNote);
+    for (const note of notes) out.push({ params: { lang: langParam(l), id: note.id }, props: { note } });
+  }
+  return out;
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+const { note } = Astro.props;
+const { Content } = await render(note.entry);
+const kind = kinds[note.data.kind];
+const cl = note.fallback ? contentLangAttr(note.contentLang) : undefined;
+const chapters = Object.fromEntries((await getChapters(lang)).map((c) => [c.id, c]));
+const linked = note.data.components.map((id) => chapters[id]).filter((c) => c !== undefined);
+---
+
+<Base lang={lang} title={note.data.title} description={note.data.summary}>
+  <section class="ph">
+    <div class="wrap">
+      <p class="crumbs label">
+        <a href={url('/notes/', lang)}>{text.nav.notes}</a>
+        <span>/</span>
+        <time datetime={note.data.date.toISOString()}>{fmtDate(note.data.date)}</time>
+        <span>/</span>
+        <span class="kind" data-kind={note.data.kind}>{kind.mark} {kind.en}</span>
+        {note.data.sample && <span>· {text.common.sample}</span>}
+        {note.data.draft && <span>· {text.common.draft}</span>}
+      </p>
+      <div class="ph-title">
+        <h1 lang={cl} style={`view-transition-name:note-${note.id};font-size:clamp(30px,4.4vw,60px)`}>{note.data.title}</h1>
+      </div>
+      {note.fallback && <FallbackNotice lang={lang} />}
+      {note.data.summary && <p class="ph-lead" lang={cl}>{note.data.summary}</p>}
+      {
+        linked.length > 0 && (
+          <div class="ph-meta chips">
+            <span class="label">{text.notes.linked}</span>
+            {linked.map((c) => (
+              <a class="chip" href={url(`/handbook/${c.id}/`, lang)}>{pad2(c.data.order)} <span lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</span></a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <article class="prose page-body" lang={cl} style="--chapter:'§'">
+        <Content />
+      </article>
+    </div>
+  </section>
+</Base>

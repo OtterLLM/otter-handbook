@@ -11,18 +11,21 @@
  *   current  当前所在的章节（章节页用：一直高亮它，面板默认显示它）
  *   compact  只要图，不要面板（章节页侧栏用）
  */
-import { getChapters, getOutline, pad2 } from '../lib/handbook';
-import { parts, statusLabel } from '../site.config';
+import { getChapters, getOutline, pad2, subtitle, contentLangAttr } from '../lib/handbook';
+import { parts } from '../site.config';
 import { url } from '../lib/url';
+import { t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   current?: string;
   compact?: boolean;
 }
 
-const { current = '', compact = false } = Astro.props;
+const { lang, current = '', compact = false } = Astro.props;
+const text = t(lang);
 
-const chapters = await getChapters();
+const chapters = await getChapters(lang);
 const by = Object.fromEntries(chapters.map((c) => [c.id, c]));
 const outlines = Object.fromEntries(await Promise.all(chapters.map(async (c) => [c.id, await getOutline(c)] as const)));
 
@@ -44,11 +47,16 @@ const main = [
   { id: 'data', y: 592, h: 36, dashed: true },
 ];
 const racks = [
-  { part: parts.training, x: 590, y: 40, ids: ['optimizer', 'schedule', 'regularization', 'initialization'] },
-  { part: parts.after, x: 590, y: 340, ids: ['evaluation', 'distillation', 'quantization', 'inference'] },
+  { part: parts.training, key: 'training' as const, x: 590, y: 40, ids: ['optimizer', 'schedule', 'regularization', 'initialization'] },
+  { part: parts.after, key: 'after' as const, x: 590, y: 340, ids: ['evaluation', 'distillation', 'quantization', 'inference'] },
 ];
 const variants = (id: string) => (by[id]?.data.variants ?? '').split(/\s+/).filter(Boolean).join(' · ');
-const href = (id: string) => url(`/handbook/${id}/`);
+const href = (id: string) => url(`/handbook/${id}/`, lang);
+// Accessible name of a box: number, title, and the secondary name when it is in the same language family
+const aria = (id: string, full = true) => {
+  const c = by[id]!;
+  return [no(id), c.data.title, full && c.contentLang === 'zh' ? c.data.en : ''].filter(Boolean).join(' ');
+};
 const no = (id: string) => pad2(by[id]!.data.order);
 
 const done = chapters.filter((c) => c.data.status !== 'planned').length;
@@ -56,23 +64,23 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
 
 <figure class:list={['atlas', { 'atlas-compact': compact }]} data-atlas data-active={current} data-current={current || undefined}>
   <div class="atlas-map">
-    <svg viewBox="0 0 880 640" role="group" aria-label="模型架构图：每个框是一章">
+    <svg viewBox="0 0 880 640" role="group" aria-label={text.atlas.aria}>
       <defs>
         <marker id="tip" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 8 4 0 8z" fill="context-stroke"></path>
         </marker>
       </defs>
 
-      <!-- 循环：框住的那一摞会重复 L 层、再整个绕 T 圈 -->
+      {/* 循环：框住的那一摞会重复 L 层、再整个绕 T 圈 */}
       <rect class="w-loop" x="34" y="170" width="338" height="238" rx="8"></rect>
 
-      <!-- 主干：token 从下往上流 -->
+      {/* 主干：token 从下往上流 */}
       <path class="w" d={`M${MID} 592V48`}></path>
       <g class="tokens" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => <circle r="3" style={`--i:${i}`} />)}
       </g>
 
-      <!-- 残差：绕过去，再加回来 -->
+      {/* 残差：绕过去，再加回来 */}
       <path class="w w-skip" d={`M${MID} 402H96V302H${MID - 9}`} marker-end="url(#tip)"></path>
       <path class="w w-skip" d={`M${MID} 290H96V190H${MID - 9}`} marker-end="url(#tip)"></path>
       {
@@ -84,15 +92,15 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
         ))
       }
 
-      <!-- 梯度：从损失出发，经过训练那一栏，回到模型里更新参数 -->
+      {/* 梯度：从损失出发，经过训练那一栏，回到模型里更新参数 */}
       <path class="w w-grad" d="M350 29H725V40" marker-end="url(#tip)"></path>
       <path class="w w-grad" d="M590 157H574V302H374" marker-end="url(#tip)"></path>
       <text class="t-note t-grad" x="538" y="22">∂L / ∂θ</text>
-      <text class="t-note t-grad" x="566" y="318" text-anchor="end">更新参数</text>
+      <text class="t-note t-grad" x="566" y="318" text-anchor="end">{text.atlas.updateParams}</text>
       <path class="w" d="M725 274V338" marker-end="url(#tip)"></path>
-      <text class="t-note" x="735" y="311">训练完</text>
+      <text class="t-note" x="735" y="311">{text.atlas.trained}</text>
 
-      <!-- 框右边的小字：这个位置有哪几类做法 -->
+      {/* 框右边的小字：这个位置有哪几类做法 */}
       <g class="variants" aria-hidden="true">
         {
           main
@@ -106,16 +114,16 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
         <text class="t-var v-residual" x={X + W + 16} y="193.5">{variants('residual')}</text>
       </g>
 
-      <!-- 08 循环：标签本身就是入口 -->
-      <a class="node node-text" href={href('loop')} data-id="loop" aria-label={`${no('loop')} ${by.loop!.data.title}`}>
+      {/* 08 循环：标签本身就是入口 */}
+      <a class="node node-text" href={href('loop')} data-id="loop" aria-label={aria('loop', false)}>
         <rect x="30" y="146" width="232" height="20" rx="3"></rect>
         <text class="n-no" x="36" y="160">{no('loop')}</text>
         <text class="n-label" x="60" y="160.5">LOOP</text>
-        <text class="n-zh" x="104" y="160">× L 层 · × T 圈</text>
+        <text class="n-zh" x="104" y="160">{text.atlas.loopLabel}</text>
       </a>
 
-      <!-- 07 残差：挂在旁路上的一枚小牌子 -->
-      <a class="node node-pill" href={href('residual')} data-id="residual" aria-label={`${no('residual')} ${by.residual!.data.title}`}>
+      {/* 07 残差：挂在旁路上的一枚小牌子 */}
+      <a class="node node-pill" href={href('residual')} data-id="residual" aria-label={aria('residual', false)}>
         <rect x="46" y="226" width="100" height="26" rx="13"></rect>
         <text class="n-no" x="58" y="243">{no('residual')}</text>
         <text class="n-label" x="78" y="243.5">RESIDUAL</text>
@@ -131,7 +139,7 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               class:list={['node', { 'node-thin': thin, 'node-dashed': b.dashed }]}
               href={href(b.id)}
               data-id={b.id}
-              aria-label={`${no(b.id)} ${c.data.title} ${c.data.en}`}
+              aria-label={aria(b.id)}
             >
               <rect x={X} y={b.y} width={W} height={b.h} rx="3" />
               <text class="n-no" x={X + 12} y={cy + 3.5}>{no(b.id)}</text>
@@ -150,17 +158,17 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               {rack.part.no} · {rack.part.en}
             </text>
             <text class="t-rack-zh" x={rack.x + 256} y={rack.y + 24} text-anchor="end">
-              {rack.part.zh}
+              {text.parts[rack.key].title}
             </text>
             {rack.ids.map((id, i) => {
               const c = by[id]!;
               const y = rack.y + 38 + i * 48;
               return (
-                <a class="node" href={href(id)} data-id={id} aria-label={`${no(id)} ${c.data.title} ${c.data.en}`}>
+                <a class="node" href={href(id)} data-id={id} aria-label={aria(id)}>
                   <rect x={rack.x + 14} y={y} width="242" height="38" rx="3" />
                   <text class="n-no" x={rack.x + 26} y={y + 22.5}>{no(id)}</text>
                   <text class="n-label" x={rack.x + 50} y={y + 23.5}>{c.data.label}</text>
-                  <text class="n-zh" x={rack.x + 245} y={y + 23} text-anchor="end">{c.data.title}</text>
+                  <text class="n-zh" x={rack.x + 245} y={y + 23} text-anchor="end" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</text>
                 </a>
               );
             })}
@@ -174,17 +182,17 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
     !compact && (
       <aside class="insp" aria-live="polite">
         <article class="panel" data-panel="default" hidden={!!current}>
-          <p class="label">Inspect</p>
-          <h3 class="panel-idle">把指针移到任意一个组件上。</h3>
-          <p class="panel-blurb">它在手册里拆成哪几类、写到哪一步了，这里都会显示；点进去就是那一章。</p>
+          <p class="label">{text.atlas.inspect}</p>
+          <h3 class="panel-idle">{text.atlas.idle}</h3>
+          <p class="panel-blurb">{text.atlas.idleBlurb}</p>
           <ul class="legend">
-            <li><i class="lg lg-flow" />前向：token 从下往上</li>
-            <li><i class="lg lg-grad" />梯度与参数更新</li>
-            <li><i class="lg lg-skip" />残差旁路</li>
-            <li><i class="lg lg-loop" />重复 L 层，或者循环 T 圈</li>
+            <li><i class="lg lg-flow" />{text.atlas.legendFlow}</li>
+            <li><i class="lg lg-grad" />{text.atlas.legendGrad}</li>
+            <li><i class="lg lg-skip" />{text.atlas.legendSkip}</li>
+            <li><i class="lg lg-loop" />{text.atlas.legendLoop}</li>
           </ul>
           <p class="panel-progress label">
-            写作进度 <b>{pad2(done)}</b> / {pad2(chapters.length)} 章已动笔
+            {text.atlas.progress} <b>{pad2(done)}</b> / {pad2(chapters.length)} {text.atlas.progressSuffix}
             <span class="meter" style={`--p:${done / chapters.length}`} />
           </p>
         </article>
@@ -194,12 +202,12 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
             <header class="panel-head">
               <span class="panel-no">{pad2(c.data.order)}</span>
               <div>
-                <h3>{c.data.title}</h3>
-                <p class="panel-en">{c.data.en}</p>
+                <h3 lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</h3>
+                {subtitle(c) && <p class="panel-en" lang={subtitle(c)!.lang}>{subtitle(c)!.text}</p>}
               </div>
             </header>
             <canvas class="panel-fig" data-fig={c.id} aria-hidden="true" />
-            <p class="panel-blurb">{c.data.blurb}</p>
+            <p class="panel-blurb" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.blurb}</p>
             {outlines[c.id]!.length > 0 && (
               <dl class="panel-cats">
                 {outlines[c.id]!.map((o) => (
@@ -211,10 +219,10 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               </dl>
             )}
             <footer class="panel-foot">
-              <span class="status" data-status={c.data.status}>{statusLabel[c.data.status]}</span>
+              <span class="status" data-status={c.data.status}>{text.status[c.data.status]}</span>
               <span class="meter" style={`--p:${c.data.progress}`} />
               <a class="panel-go" href={href(c.id)}>
-                读这一章 <span class="arr">→</span>
+                {text.atlas.read} <span class="arr">→</span>
               </a>
             </footer>
           </article>

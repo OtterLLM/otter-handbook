@@ -18,6 +18,8 @@ export const CALLOUTS = {
   open: { mark: '?', zh: '存疑', en: 'OPEN QUESTION' },
 };
 
+const isZh = (ctx) => /\/zh\//.test(ctx.fileURL?.pathname ?? '');
+
 export const callouts = defineMdastPlugin({
   name: 'handbook-callouts',
   containerDirective(node, ctx) {
@@ -28,7 +30,8 @@ export const callouts = defineMdastPlugin({
       hProperties: {
         class: `callout callout-${node.name}`,
         'data-mark': kind.mark,
-        'data-label': `${kind.zh} ${kind.en}`,
+        // Chinese sources (src/content/**/zh/) get "观察 OBSERVATION"; English sources just "OBSERVATION"
+        'data-label': isZh(ctx) ? `${kind.zh} ${kind.en}` : kind.en,
       },
     });
     const first = node.children[0];

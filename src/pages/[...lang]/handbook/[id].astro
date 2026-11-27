@@ -1,0 +1,243 @@
+---
+/**
+ * 章节页。三栏：
+ *   左  小地图（你在这里）
+ *   中  本章结构 → 正文 → 挂在这一章下的观察与文献 → 上一章 / 下一章
+ *   右  本页目录
+ * 大标题和目录里那一行的标题同名，所以从目录点进来的时候，标题是「长」过来的。
+ */
+import { getCollection, render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import '../../../styles/prose.css';
+import '../../../styles/atlas.css';
+import '../../../styles/home.css';
+import '../../../styles/inner.css';
+import Base from '../../../layouts/Base.astro';
+import Atlas from '../../../components/Atlas.astro';
+import FallbackNotice from '../../../components/FallbackNotice.astro';
+import { contentLangAttr, fmtDate, getChapters, getNotes, getOutline, isVisibleNote, pad2, subtitle } from '../../../lib/handbook';
+import { kinds, parts } from '../../../site.config';
+import { url } from '../../../lib/url';
+import { getLang, langParam, langs, t } from '../../../i18n';
+
+export async function getStaticPaths() {
+  const out = [];
+  for (const l of langs) {
+    const chapters = await getChapters(l);
+    for (const [j, chapter] of chapters.entries()) {
+      out.push({
+        params: { lang: langParam(l), id: chapter.id },
+        props: { chapter, prev: chapters[j - 1], next: chapters[j + 1] },
+      });
+    }
+  }
+  return out;
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+const tx = text.chapter;
+const { chapter, prev, next } = Astro.props;
+const { data } = chapter;
+const part = parts[data.part];
+const no = pad2(data.order);
+const cl = chapter.fallback ? contentLangAttr(chapter.contentLang) : undefined;
+const sub = subtitle(chapter);
+
+const { Content, headings } = await render(chapter.entry);
+const hasBody = (chapter.body ?? '').trim().length > 0;
+const outline = await getOutline(chapter);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+
+const notes = (await getNotes(lang)).filter((n) => isVisibleNote(n) && n.data.components.includes(chapter.id));
+const papers = (await getCollection('papers', (p) => p.data.components.includes(chapter.id))).sort(
+  (a, b) => a.data.year - b.data.year,
+);
+const source = `src/content/handbook/${lang}/${no}-${chapter.id}.md`;
+---
+
+<Base lang={lang} title={`${no} ${data.title}`} description={data.blurb}>
+  <section class="ph">
+    <div class="wrap">
+      <p class="crumbs label">
+        <a href={url('/handbook/', lang)}>{text.nav.handbook}</a>
+        <span>/</span>
+        <span>{tx.part} {part.no} · {text.parts[data.part].title}</span>
+        <span>/</span>
+        <span class="accent">§{no}</span>
+      </p>
+      <div class="ph-title">
+        <span class="ph-no" aria-hidden="true">{no}</span>
+        <div>
+          <h1 lang={cl} style={`view-transition-name:ch-${chapter.id}`}>{data.title}</h1>
+          {sub && <p class="ph-en" lang={sub.lang}>{sub.text}</p>}
+        </div>
+      </div>
+      {chapter.fallback && <FallbackNotice lang={lang} />}
+      <p class="ph-lead" lang={cl}>{data.blurb}</p>
+      <dl class="ph-meta">
+        <div>
+          <dt class="label">{tx.status}</dt>
+          <dd><span class="status" data-status={data.status}>{text.status[data.status]}</span></dd>
+        </div>
+        <div>
+          <dt class="label">{tx.progress}</dt>
+          <dd><span class="meter" style={`--p:${data.progress}`}></span>{Math.round(data.progress * 100)}%</dd>
+        </div>
+        <div><dt class="label">{tx.notes}</dt><dd>{pad2(notes.length)}</dd></div>
+        <div><dt class="label">{tx.papers}</dt><dd>{pad2(papers.length)}</dd></div>
+        {data.updated && <div><dt class="label">{tx.updated}</dt><dd>{fmtDate(data.updated)}</dd></div>}
+      </dl>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap ch">
+      <aside class="ch-rail">
+        <p class="label"><span>{tx.here}</span><span class="accent">§{no}</span></p>
+        <Atlas lang={lang} current={chapter.id} compact />
+        <p class="atlas-hint">{text.atlas.hint}</p>
+      </aside>
+
+      <article class="ch-main">
+        {
+          outline.length > 0 && (
+            <section aria-labelledby="outline-h">
+              <p class="label sec-label" id="outline-h">{tx.outline(pad2(outline.length))}</p>
+              <ol class="outline">
+                {outline.map((o, i) => (
+                  <li>
+                    <span class="n">{no}.{i + 1}</span>
+                    <span class="t" lang={cl}>{o.anchor ? <a href={`#${o.anchor}`}>{o.title}</a> : o.title}</span>
+                    <span class="i" lang={cl}>{o.items.map((item) => <span class="chip">{item}</span>)}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        }
+
+        {
+          hasBody ? (
+            <div class="prose" lang={cl} style={`--chapter:'${no}'`} data-prose>
+              <Content />
+            </div>
+          ) : (
+            <div class="empty">
+              <p class="label">{tx.emptyLabel}</p>
+              <h2>{tx.emptyTitle}</h2>
+              <p>
+                {tx.emptyPre}<code>{source}</code>{tx.emptyPost}
+              </p>
+            </div>
+          )
+        }
+
+        <section class="attached" id="notes">
+          <p class="label sec-label"><span class="accent">◆</span>{tx.attachedNotes} · {pad2(notes.length)}</p>
+          {
+            notes.length > 0 ? (
+              <ol class="notes">
+                {notes.map((n) => (
+                  <li>
+                    <a class="note" href={url(`/notes/${n.id}/`, lang)}>
+                      <time datetime={fmtDate(n.data.date)}>{fmtDate(n.data.date)}</time>
+                      <span class="kind" data-kind={n.data.kind}>{kinds[n.data.kind].mark} {text.kinds[n.data.kind].label}</span>
+                      <div>
+                        <h3>
+                          <span lang={n.fallback ? contentLangAttr(n.contentLang) : undefined}>{n.data.title}</span>
+                          {n.fallback && <span class="note-sample">{text.common.fallbackTag}</span>}
+                        </h3>
+                        {n.data.summary && <p lang={n.fallback ? contentLangAttr(n.contentLang) : undefined}>{n.data.summary}</p>}
+                      </div>
+                      <span class="row-arr" aria-hidden="true">→</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p>{tx.noNotesPre}<code>components: [{chapter.id}]</code>{tx.noNotesPost}</p>
+            )
+          }
+        </section>
+
+        <section class="attached" id="papers">
+          <p class="label sec-label"><span>◇</span>{tx.attachedPapers} · {pad2(papers.length)}</p>
+          {
+            papers.length > 0 ? (
+              <ol class="refs">
+                {papers.map((p) => (
+                  <li>
+                    <span class="y">{p.data.year}</span>
+                    <span>
+                      {p.data.url ? <a href={p.data.url} rel="noopener">{p.data.title} ↗</a> : p.data.title}
+                      <small>{p.data.authors}{p.data.venue && ` · ${p.data.venue}`}</small>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p>{tx.noPapersPre}<code>src/data/papers.yaml</code>{tx.noPapersMid}<code>components: [{chapter.id}]</code>{tx.noPapersPost}</p>
+            )
+          }
+        </section>
+
+        <nav class="pager" aria-label={tx.pagerAria}>
+          {
+            prev && (
+              <a href={url(`/handbook/${prev.id}/`, lang)} rel="prev">
+                <span class="label">← {tx.prev} · {pad2(prev.data.order)}</span>
+                <b lang={prev.fallback ? contentLangAttr(prev.contentLang) : undefined}>{prev.data.title}</b>
+              </a>
+            )
+          }
+          {
+            next && (
+              <a href={url(`/handbook/${next.id}/`, lang)} rel="next">
+                <span class="label">{tx.next} · {pad2(next.data.order)} →</span>
+                <b lang={next.fallback ? contentLangAttr(next.contentLang) : undefined}>{next.data.title}</b>
+              </a>
+            )
+          }
+        </nav>
+      </article>
+
+      {
+        toc.length > 0 && (
+          <nav class="ch-rail ch-toc" aria-label={tx.tocAria}>
+            <p class="label">{tx.toc}</p>
+            <ol lang={cl}>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`} data-depth={h.depth}>{h.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
+    </div>
+  </section>
+</Base>
+
+<script>
+  // 本页目录：读到哪一节，哪一条就亮
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.ch-toc a')];
+  if (links.length && 'IntersectionObserver' in window) {
+    const byId = new Map(links.map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          links.forEach((a) => a.classList.remove('is-here'));
+          byId.get(entry.target.id)?.classList.add('is-here');
+        }
+      },
+      { rootMargin: '-15% 0px -70% 0px' },
+    );
+    byId.forEach((_, id) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+  }
+</script>

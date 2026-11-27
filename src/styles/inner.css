@@ -471,3 +471,14 @@ a.t:hover {
     transform: translate(11px, -5px);
   }
 }
+
+/* 只有另一种语言的版本时，页头下面的小提示 */
+.notice {
+  display: inline-block;
+  margin-top: clamp(14px, 2vw, 22px);
+  padding: 4px 10px;
+  color: var(--ink-2);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  border: 1px dashed var(--rule-2);
+}

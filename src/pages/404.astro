@@ -2,13 +2,18 @@
 import '../styles/inner.css';
 import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
+import { ui } from '../i18n/ui';
+
+// GitHub Pages serves a single /404.html for both languages: both texts are rendered here, English
+// is shown by default, and the inline script below switches to Chinese when the URL is under /zh/.
+const { en, zh } = ui;
 ---
 
-<Base title="404">
+<Base lang="en" title="404" switchPath="/" alternates={false}>
   <section class="ph lost">
     <div class="wrap">
-      <p class="crumbs label"><span class="accent">§</span><span>404 · Not found</span></p>
-      <!-- 一条损失曲线，和卡在局部极小值里来回晃的那个点 -->
+      <p class="crumbs label"><span class="accent">§</span><span>{en.notFound.crumb}</span></p>
+      {/* 一条损失曲线，和卡在局部极小值里来回晃的那个点 */}
       <svg viewBox="0 0 560 180" aria-hidden="true">
         <path class="axis" d="M20 10V160H550"></path>
         <path class="curve" d="M30 22C80 60 110 118 160 124S220 96 250 104 300 150 350 152 430 60 470 58 520 140 545 150"></path>
@@ -18,13 +23,35 @@ import { url } from '../lib/url';
         <text x="520" y="176">step</text>
       </svg>
       <div class="ph-title">
-        <h1>陷入了局部极小值</h1>
+        <h1><span data-l="en">{en.notFound.title}</span><span data-l="zh" lang="zh-CN" hidden>{zh.notFound.title}</span></h1>
       </div>
-      <p class="ph-lead">这个地址下面什么都没有。换个学习率，或者直接回到首页。</p>
+      <p class="ph-lead">
+        <span data-l="en">{en.notFound.lead}</span><span data-l="zh" lang="zh-CN" hidden>{zh.notFound.lead}</span>
+      </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px">
-        <a class="btn btn-primary" href={url('/')}>回到首页 <span class="arr">→</span></a>
-        <a class="btn" href={url('/handbook/')}>看目录 <span class="arr">→</span></a>
+        <a class="btn btn-primary" href={url('/')} data-home>
+          <span data-l="en">{en.notFound.home}</span><span data-l="zh" lang="zh-CN" hidden>{zh.notFound.home}</span>
+          <span class="arr">→</span>
+        </a>
+        <a class="btn" href={url('/handbook/')} data-toc-link>
+          <span data-l="en">{en.notFound.toc}</span><span data-l="zh" lang="zh-CN" hidden>{zh.notFound.toc}</span>
+          <span class="arr">→</span>
+        </a>
       </div>
     </div>
   </section>
 </Base>
+
+<script is:inline define:vars={{ zhHome: url('/', 'zh'), zhToc: url('/handbook/', 'zh'), zhTitle: zh.site.nameSub }}>
+  if (location.pathname.indexOf('/zh/') !== -1) {
+    document.documentElement.lang = 'zh-CN';
+    document.querySelectorAll('[data-l="en"]').forEach(function (el) {
+      el.hidden = true;
+    });
+    document.querySelectorAll('[data-l="zh"]').forEach(function (el) {
+      el.hidden = false;
+    });
+    document.querySelector('[data-home]').setAttribute('href', zhHome);
+    document.querySelector('[data-toc-link]').setAttribute('href', zhToc);
+  }
+</script>

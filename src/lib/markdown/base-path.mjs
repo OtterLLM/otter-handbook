@@ -19,19 +19,26 @@ export const basePath = (base = '/') => {
     !u.startsWith(`${prefix}/`)
       ? prefix + u
       : u;
-  const fixUrl = (node, ctx) => {
-    const u = fix(node.url);
+  // Chinese sources live under src/content/**/zh/: their internal page links get the `/zh` prefix too
+  // (only links to site pages, not images or other assets).
+  const pages = /^\/(handbook|notes|papers|about|lab)(\/|$)|^\/$/;
+  const isZh = (ctx) => /\/zh\//.test(ctx.fileURL?.pathname ?? '');
+  const lang = (u, zh) => (zh && typeof u === 'string' && pages.test(u) ? `/zh${u === '/' ? '/' : u}` : u);
+
+  const fixUrl = (node, ctx, page = false) => {
+    const u = fix(page ? lang(node.url, isZh(ctx)) : node.url);
     if (u !== node.url) ctx.setProperty(node, 'url', u);
   };
-  const attr = /(\s(?:href|src|poster)\s*=\s*)(["'])(\/[^"']*)\2/g;
+  const attr = /(\s(href|src|poster)\s*=\s*)(["'])(\/[^"']*)\3/g;
 
   return defineMdastPlugin({
     name: 'handbook-base-path',
-    link: fixUrl,
+    link: (node, ctx) => fixUrl(node, ctx, true),
     image: fixUrl,
-    definition: fixUrl,
+    definition: (node, ctx) => fixUrl(node, ctx, true),
     html(node, ctx) {
-      const v = node.value.replace(attr, (m, lead, q, u) => `${lead}${q}${fix(u)}${q}`);
+      const zh = isZh(ctx);
+      const v = node.value.replace(attr, (m, lead, name, q, u) => `${lead}${q}${fix(name === 'href' ? lang(u, zh) : u)}${q}`);
       if (v !== node.value) ctx.setProperty(node, 'value', v);
     },
   });

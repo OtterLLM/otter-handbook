@@ -2,14 +2,24 @@
 import { site } from '../site.config';
 import { isCurrent, url } from '../lib/url';
 import { pad2 } from '../lib/handbook';
+import { t, type Lang } from '../i18n';
+import { ui } from '../i18n/ui';
 
+interface Props {
+  lang: Lang;
+  /** language-neutral path of the current page, for the language switch */
+  switchPath: string;
+}
+
+const { lang, switchPath } = Astro.props;
+const text = t(lang);
 const path = Astro.url.pathname;
 ---
 
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href={url('/')} aria-label={`${site.name} 首页`}>
-      <!-- 一张海獭的脸：圆脑袋，贴在两边的小耳朵，又宽又大的鼻子 -->
+    <a class="brand" href={url('/', lang)} aria-label={text.site.homeAria(site.name)}>
+      {/* 一张海獭的脸：圆脑袋，贴在两边的小耳朵，又宽又大的鼻子 */}
       <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
         <g fill="currentColor">
           <circle cx="4.7" cy="11.4" r="2.5"></circle>
@@ -34,28 +44,32 @@ const path = Astro.url.pathname;
           style="fill:none"></path>
       </svg>
       <span class="brand-name">{site.name}</span>
-      <span class="brand-sub">{site.nameZh}</span>
+      <span class="brand-sub">{text.site.nameSub}</span>
     </a>
 
-    <nav class="nav" aria-label="主导航">
+    <nav class="nav" aria-label={text.header.navAria}>
       {
         site.nav.map((item, i) => (
-          <a href={url(item.href)} aria-current={isCurrent(path, item.href) ? 'page' : undefined}>
+          <a href={url(item.href, lang)} aria-current={isCurrent(path, item.href, lang) ? 'page' : undefined}>
             <span class="nav-i">{pad2(i + 1)}</span>
-            {item.label}
+            {text.nav[item.key]}
           </a>
         ))
       }
     </nav>
 
     <div class="header-tools">
-      <button class="tool" type="button" data-theme-toggle aria-label="切换明暗主题" title="切换明暗主题">
+      <div class="lang-switch" role="group" aria-label={text.header.langAria}>
+        <a href={url(switchPath, 'en')} lang="en" hreflang="en" aria-current={lang === 'en' ? 'true' : undefined}>{ui.en.header.langEn}</a>
+        <a href={url(switchPath, 'zh')} lang="zh-CN" hreflang="zh-CN" aria-current={lang === 'zh' ? 'true' : undefined}>{ui.zh.header.langZh}</a>
+      </div>
+      <button class="tool" type="button" data-theme-toggle aria-label={text.header.themeToggle} title={text.header.themeToggle}>
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
           <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"></path>
         </svg>
       </button>
-      <a class="tool" href={site.repo} rel="noopener" aria-label="GitHub 仓库" title="GitHub">
+      <a class="tool" href={site.repo} rel="noopener" aria-label={text.header.github} title="GitHub">
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <path
             fill="currentColor"
