@@ -1,7 +1,10 @@
 /**
- * 十九张会动的小图：每一章一张，用几笔把「这个组件在干什么」画出来。
- * 它们出现在架构图旁边的检视面板里，也出现在目录里指针划过时跟着走的那张小卡片上。
- * 画在一块很小的 canvas 上（逻辑尺寸大约 280 × 120），只用三种颜色：墨、淡墨、蓝。
+ * Nineteen small animated figures: one per chapter, sketching in a few strokes what that
+ * component does.
+ * They show up in the inspector panel next to the architecture diagram, and in the small card
+ * that follows the pointer when it hovers over the table of contents.
+ * Drawn on a tiny canvas (logical size about 280 x 120), using only three colors: ink, faint ink,
+ * and blue.
  */
 
 export interface FigColors {
@@ -17,9 +20,9 @@ const rnd = (n: number) => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
 };
-const P = 16; //  四周留白
+const P = 16; //  margin on all sides
 
-/** 在留白以内画一条函数曲线：x、y 都是 0…1 */
+/** draw a function's curve within the margin: x and y both 0...1 */
 function plot(c: CanvasRenderingContext2D, w: number, h: number, f: (x: number) => number, from = 0, to = 1) {
   c.beginPath();
   for (let i = 0; i <= 64; i++) {
@@ -47,7 +50,7 @@ const swish = (x: number) => {
 };
 
 const FIGS: Record<string, Draw> = {
-  // 一个词被切成几块；隔一会儿换一种切法
+  // a word split into pieces; the split changes every so often
   tokenizer(c, w, h, t, k) {
     const cuts = [['token', 'iz', 'ation'], ['to', 'ken', 'ization'], ['t', 'o', 'k', 'e', 'n', 'iz', 'ation']][Math.floor(t / 1.8) % 3]!;
     c.font = '500 15px "JetBrains Mono NL", monospace';
@@ -67,7 +70,7 @@ const FIGS: Record<string, Draw> = {
     });
   },
 
-  // 查表：每个 token 取出自己的那一行向量
+  // table lookup: each token pulls out its own row vector
   embedding(c, w, h, t, k) {
     const rows = 6;
     const cols = 18;
@@ -83,7 +86,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 旋转位置编码：每一对维度转得不一样快
+  // rotary position encoding: each pair of dimensions rotates at a different speed
   position(c, w, h, t, k) {
     const n = 7;
     for (let i = 0; i < n; i++) {
@@ -103,7 +106,7 @@ const FIGS: Record<string, Draw> = {
     }
   },
 
-  // 一组高高低低的激活，被拉回到同一个尺度
+  // a set of activations, high and low, pulled back onto the same scale
   normalization(c, w, h, t, k) {
     const n = 14;
     const raw = Array.from({ length: n }, (_, i) => 0.12 + rnd(i * 7.3) ** 2 * 1.9);
@@ -128,7 +131,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 因果注意力：每个位置只看自己和前面的；一行一行扫过去
+  // causal attention: each position only looks at itself and earlier ones; sweeping row by row
   attention(c, w, h, t, k) {
     const n = 8;
     const s = Math.min((h - 2 * P) / n, 13);
@@ -151,7 +154,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 一条激活函数，和在它上面来回走的一个点
+  // an activation function, with a point walking back and forth along it
   ffn(c, w, h, t, k) {
     c.strokeStyle = k.dim;
     c.beginPath();
@@ -167,7 +170,7 @@ const FIGS: Record<string, Draw> = {
     dot(c, ...at(w, h, x, swish(x)), 4);
   },
 
-  // 一条直通的路，和一条绕过去再加回来的路
+  // a straight-through path, and one that detours and adds back in
   residual(c, w, h, t, k) {
     const y = h * 0.62;
     const [a, b] = [w * 0.26, w * 0.74];
@@ -204,7 +207,7 @@ const FIGS: Record<string, Draw> = {
     }
   },
 
-  // 同一摞层走了一遍，又走一遍
+  // the same stack of layers, run through again and again
   loop(c, w, h, t, k) {
     const n = 5;
     const lap = Math.floor(t / 2.5) % 3;
@@ -226,7 +229,7 @@ const FIGS: Record<string, Draw> = {
     c.fillText(`× ${lap + 1}`, w * 0.8, h / 2 + 4);
   },
 
-  // 一排 logits，最高的那个被选出来
+  // a row of logits, with the highest one picked out
   head(c, w, h, t, k) {
     const n = 14;
     const logits = Array.from({ length: n }, (_, i) => 2.4 * Math.sin(i * 1.7 + Math.floor(t / 1.4) * 2.1) + 1.5 * rnd(i * 3.1));
@@ -241,7 +244,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 文档排着队流过来，四个一组打成批
+  // documents queue up and flow in, batched four at a time
   data(c, w, h, t, k) {
     const gap = 17;
     const shift = (t * 22) % (gap * 4);
@@ -257,7 +260,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 预测的分布一点点往正确答案上靠
+  // the predicted distribution gradually shifts toward the right answer
   objective(c, w, h, t, k) {
     const n = 9;
     const s = (t * 0.35) % 1;
@@ -275,7 +278,7 @@ const FIGS: Record<string, Draw> = {
     c.fillText(`loss ${(2.6 * (1 - s) ** 1.6 + 0.08).toFixed(2)}`, P, P + 4);
   },
 
-  // 等高线，和一条螺旋着落进谷底的路
+  // contour lines, with a path spiraling down into the valley
   optimizer(c, w, h, t, k) {
     const [cx, cy] = [w * 0.56, h * 0.54];
     c.strokeStyle = k.dim;
@@ -304,7 +307,7 @@ const FIGS: Record<string, Draw> = {
     dot(c, ...last, 3.5);
   },
 
-  // 先热身，再沿着余弦降下去
+  // warm up first, then decay along a cosine
   schedule(c, w, h, t, k) {
     c.strokeStyle = k.dim;
     c.beginPath();
@@ -320,7 +323,7 @@ const FIGS: Record<string, Draw> = {
     dot(c, ...at(w, h, x, warmupCosine(x)), 4);
   },
 
-  // 每一步随机关掉一些单元
+  // randomly switches off some units at every step
   regularization(c, w, h, t, k) {
     const [rows, cols] = [5, 14];
     const beat = Math.floor(t * 1.6);
@@ -338,7 +341,7 @@ const FIGS: Record<string, Draw> = {
     }
   },
 
-  // 信号穿过很多层：炸掉、消失，或者刚刚好
+  // a signal passing through many layers: it explodes, vanishes, or lands just right
   initialization(c, w, h, t, k) {
     const s = 0.5 + 0.5 * Math.sin(t * 0.9);
     c.strokeStyle = k.dim;
@@ -350,7 +353,7 @@ const FIGS: Record<string, Draw> = {
     c.lineWidth = 1;
   },
 
-  // 训练损失一直在降，验证损失掉头往上的那一刻
+  // training loss keeps dropping, the moment validation loss turns back up
   evaluation(c, w, h, t, k) {
     const train = (x: number) => 0.86 * Math.exp(-x * 3.4) + 0.06;
     const val = (x: number) => 0.8 * Math.exp(-x * 3.8) + 0.2 + 0.42 * Math.max(0, x - 0.45) ** 1.5;
@@ -373,7 +376,7 @@ const FIGS: Record<string, Draw> = {
     dot(c, px, py, 3.5);
   },
 
-  // 大模型把「软」的答案一点点传给小模型
+  // a large model hands its "soft" answers over to a small model, bit by bit
   distillation(c, w, h, t, k) {
     const [ax, bx, y] = [w * 0.24, w * 0.8, h / 2];
     c.strokeStyle = k.ink;
@@ -396,7 +399,7 @@ const FIGS: Record<string, Draw> = {
     c.globalAlpha = 1;
   },
 
-  // 一条光滑的线，被压成越来越少的几级台阶
+  // a smooth line, flattened into fewer and fewer discrete steps
   quantization(c, w, h, t, k) {
     const f = (x: number) => 0.5 + 0.4 * Math.sin(x * TAU * 1.15 + 0.4);
     const levels = [16, 8, 4, 2][Math.floor(t / 1.5) % 4]!;
@@ -418,7 +421,7 @@ const FIGS: Record<string, Draw> = {
     c.fillText(`${Math.log2(levels)} bit`, P, P + 4);
   },
 
-  // 一个一个往外吐 token；前面算过的都留在缓存里
+  // tokens come out one at a time; everything computed earlier stays in the cache
   inference(c, w, h, t, k) {
     const n = 12;
     const upto = Math.floor(t * 2.4) % (n + 3);
@@ -439,7 +442,7 @@ const FIGS: Record<string, Draw> = {
   },
 };
 
-/** 把 canvas 的像素尺寸对到屏幕上，并画出 id 这一章在第 t 秒的小图 */
+/** match the canvas's pixel size to the screen, and draw chapter id's figure at second t */
 export function drawFig(canvas: HTMLCanvasElement, id: string, t: number) {
   const draw = FIGS[id];
   const c = canvas.getContext('2d');

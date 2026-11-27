@@ -1,8 +1,8 @@
 /* ───────────────────────────────────────────────────────────────
-   内页：页头、章节页的三栏、文献表、上一章 / 下一章
+   inner pages: page header, the chapter page's three columns, the papers table, prev / next chapter
    ─────────────────────────────────────────────────────────────── */
 
-/* ── 页头 ─────────────────────────────────────────────────── */
+/* ── page header ─────────────────────────────────────────────────── */
 
 .ph {
   position: relative;
@@ -91,7 +91,7 @@ a.chip:hover {
   border-color: var(--accent-ink);
 }
 
-/* ── 章节页：左边小地图，中间正文，右边本页目录 ───────────── */
+/* ── chapter page: mini-map on the left, body in the middle, on-page contents on the right ───────────── */
 
 .ch {
   display: grid;
@@ -104,7 +104,7 @@ a.chip:hover {
 .ch-rail {
   position: sticky;
   top: calc(var(--header-h) + 24px);
-  /* 放大的小地图要盖在正文上面，但仍在页头之下 */
+  /* the zoomed mini-map needs to sit above the body text, but still below the header */
   z-index: 10;
   display: grid;
   gap: 14px;
@@ -151,7 +151,7 @@ a.chip:hover {
   border-left-color: var(--accent-ink);
 }
 
-/* 本章结构：正文还没写的时候，它就是提纲 */
+/* chapter outline: before the body is written, this is the outline */
 .outline {
   margin-bottom: clamp(28px, 4vw, 48px);
   border-top: 1px solid var(--rule-2);
@@ -270,7 +270,7 @@ a.chip:hover {
   color: var(--ink-3);
 }
 
-/* 上一章 / 下一章 */
+/* prev / next chapter */
 .pager {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -336,7 +336,7 @@ a.chip:hover {
   }
 }
 
-/* ── 单栏的正文页：观察、关于 ─────────────────────────────── */
+/* ── single-column body pages: notes, about ─────────────────────────────── */
 
 .page-body {
   max-width: 46em;
@@ -362,7 +362,7 @@ a.chip:hover {
   color: var(--ink-4);
 }
 
-/* ── 文献 ─────────────────────────────────────────────────── */
+/* ── papers ─────────────────────────────────────────────────── */
 
 .papers {
   border-top: 1px solid var(--rule-2);
@@ -472,7 +472,7 @@ a.t:hover {
   }
 }
 
-/* 只有另一种语言的版本时，页头下面的小提示 */
+/* small hint under the page header, shown when only the other language's version exists */
 .notice {
   display: inline-block;
   margin-top: clamp(14px, 2vw, 22px);

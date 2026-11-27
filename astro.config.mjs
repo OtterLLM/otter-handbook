@@ -5,8 +5,9 @@ import { math } from './src/lib/markdown/math.mjs';
 import { basePath } from './src/lib/markdown/base-path.mjs';
 import { figures } from './src/lib/markdown/figures.mjs';
 
-// 本地开发时站点在根路径 `/`；
-// GitHub Pages 上站点在子路径 `/otter-handbook/`，由 .github/workflows/deploy.yml 里的 BASE_PATH 传进来。
+// In local dev, the site lives at the root path `/`;
+// on GitHub Pages it lives at the sub-path `/otter-handbook/`, passed in via BASE_PATH in
+// .github/workflows/deploy.yml.
 const base = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
@@ -19,7 +20,7 @@ export default defineConfig({
       features: { math: true, directive: true, headingAttributes: true },
       mdastPlugins: [callouts, math, basePath(base), figures],
     }),
-    // 代码高亮：明、暗各一套配色，由 src/styles/prose.css 按当前主题挑一套显示
+    // code highlighting: one color scheme each for light and dark, picked by src/styles/prose.css based on the current theme
     shikiConfig: {
       themes: { light: 'vitesse-light', dark: 'vitesse-dark' },
       defaultColor: false,

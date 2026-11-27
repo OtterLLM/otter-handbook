@@ -1,12 +1,14 @@
 import { defineMdastPlugin } from 'satteri';
 
 /**
- * 单独成段的图片排成一个图块（<figure>），按正文宽度居中显示。
- * 图片的 title 会变成图注：
+ * An image that stands alone as its own paragraph is wrapped into a figure block (<figure>),
+ * centered at the body's width.
+ * The image's title becomes its caption:
  *
- *   ![warmup 太短时的 loss 曲线](./img/warmup-loss.png "图注写在引号里")
+ *   ![loss curve when warmup is too short](./img/warmup-loss.png "the caption goes in the quotes")
  *
- * 带图注的图块会自动编号（FIG. 01、02 …），样式见 src/styles/prose.css。
+ * A captioned figure is numbered automatically (FIG. 01, 02, ...); styles are in
+ * src/styles/prose.css.
  */
 export const figures = defineMdastPlugin({
   name: 'handbook-figures',

@@ -1,14 +1,15 @@
 import { defineMdastPlugin } from 'satteri';
 
 /**
- * 手册里的五种标注块，在 Markdown 里这样写：
+ * The handbook's five kinds of callout, written in Markdown like this:
  *
- *   :::obs[warmup 太短会怎样]
- *   正文……
+ *   :::obs[what happens when warmup is too short]
+ *   body text...
  *   :::
  *
- * obs 观察（自己跑出来的） · lit 文献（别人的结论） · recipe 配方（可以直接抄的默认值）
- * pitfall 坑 · open 存疑
+ * obs observation (something I ran myself) · lit literature (someone else's conclusion) ·
+ * recipe (a default worth copying outright)
+ * pitfall · open open question
  */
 export const CALLOUTS = {
   obs: { mark: '◆', zh: '观察', en: 'OBSERVATION' },

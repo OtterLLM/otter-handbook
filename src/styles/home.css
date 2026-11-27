@@ -1,8 +1,8 @@
 /* ───────────────────────────────────────────────────────────────
-   首页封面以下的几段，和目录、列表这些内页也会用到的东西
+   the sections below the homepage cover, plus things also shared by the table of contents and other list pages
    ─────────────────────────────────────────────────────────────── */
 
-/* ── 图上画不出来的 ───────────────────────────────────────── */
+/* ── what the diagram can't show ───────────────────────────────────────── */
 
 .offmap-head {
   display: flex;
@@ -62,7 +62,7 @@
   }
 }
 
-/* ── 目录 ─────────────────────────────────────────────────── */
+/* ── table of contents ─────────────────────────────────────────────────── */
 
 .part + .part {
   margin-top: clamp(40px, 5vw, 64px);
@@ -151,7 +151,7 @@
   color: var(--ink-3);
 }
 
-/* 「仅英文 / Chinese only」：行里已有 gap，不再另加左边距 */
+/* "Chinese only / English only": the row already has a gap, so no extra left margin here */
 .row-title .note-sample {
   margin-left: 0;
 }
@@ -186,7 +186,7 @@
   transform: translateX(4px);
 }
 
-/* 跟着指针走的小卡片 */
+/* the small card that follows the pointer */
 .peek {
   position: fixed;
   top: 0;
@@ -247,7 +247,7 @@
   }
 }
 
-/* ── 观察 ─────────────────────────────────────────────────── */
+/* ── notes ─────────────────────────────────────────────────── */
 
 .notes {
   border-top: 1px solid var(--rule-2);
@@ -319,7 +319,7 @@
   }
 }
 
-/* ── 五种批注 ─────────────────────────────────────────────── */
+/* ── the five kinds of callout ─────────────────────────────────────────────── */
 
 .kinds {
   display: grid;
@@ -385,7 +385,7 @@
   }
 }
 
-/* ── 结尾 ─────────────────────────────────────────────────── */
+/* ── outro ─────────────────────────────────────────────────── */
 
 .outro {
   display: grid;

@@ -3,7 +3,7 @@ import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
 import '../styles/base.css';
 
-// 等宽字体用完整字形的自托管文件
+// self-hosted files for the monospace font, with its full glyph set
 import monoRegular from 'jetbrains-mono/fonts/webfonts/JetBrainsMonoNL-Regular.woff2?url';
 import monoMedium from 'jetbrains-mono/fonts/webfonts/JetBrainsMonoNL-Medium.woff2?url';
 import monoBold from 'jetbrains-mono/fonts/webfonts/JetBrainsMonoNL-Bold.woff2?url';
@@ -88,7 +88,7 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
     <Footer lang={lang} />
 
     <script>
-      // 明暗主题：点一下换一种，记住选择
+      // light/dark theme: click to switch, and remember the choice
       document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const root = document.documentElement;
@@ -97,12 +97,12 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
           try {
             localStorage.setItem('theme', next);
           } catch {
-            // 存不了就算了，这一页照样生效
+            // if it can't be saved, that's fine -- it still takes effect on this page
           }
         });
       });
 
-      // 进场：滚到视口里的时候才显出来
+      // entrance: only shown once scrolled into the viewport
       const targets = document.querySelectorAll('.reveal');
       if ('IntersectionObserver' in window) {
         const io = new IntersectionObserver(
@@ -116,7 +116,7 @@ const fontCss = [face(400, monoRegular), face(500, monoMedium), face(700, monoBo
           { rootMargin: '0px 0px -8% 0px' },
         );
         targets.forEach((el) => io.observe(el));
-        // 标签页在后台的时候观察器不一定会触发：保险起见，过一会儿全都显出来
+        // the observer isn't guaranteed to fire while the tab is backgrounded: as a fallback, reveal everything after a short while
         setTimeout(() => targets.forEach((el) => el.classList.add('is-in')), 2600);
       } else {
         targets.forEach((el) => el.classList.add('is-in'));

@@ -1,7 +1,8 @@
 ---
 /**
- * 试片台：只有那只海獭，和四种「印法」的开关。调造型、调光的时候用。
- * 地址栏参数：?mode=photo 选印法，?zoom=3&x=0.2&y=0.9 凑近了看。
+ * The lab: nothing but the otter and switches for the four "printing styles". Used while tuning
+ * its look and lighting.
+ * URL params: ?mode=photo picks the printing style, ?zoom=3&x=0.2&y=0.9 zooms in for a closer look.
  */
 import { getLang, htmlLang, langParams, t } from '../../i18n';
 import { url } from '../../lib/url';
@@ -92,7 +93,7 @@ const abs = (l: 'en' | 'zh') => new URL(url('/lab/', l), Astro.site).href;
     <script>
       import { mountOtter, type OtterHandle, type PrintMode } from '../../lib/otter/renderer';
 
-      // 地址栏里可以带参数：?mode=photo 选印法；?zoom=3&x=0.2&y=0.9 凑近了看某一处（x、y 是它身子的中点落在画面的哪里）
+      // the URL can carry params: ?mode=photo picks the printing style; ?zoom=3&x=0.2&y=0.9 zooms in on a spot (x, y are where the midpoint of its body lands in frame)
       const query = new URLSearchParams(location.search);
       const num = (key: string, fallback: number) => Number(query.get(key) ?? fallback) || fallback;
       const stage = document.querySelector<HTMLElement>('[data-stage]')!;

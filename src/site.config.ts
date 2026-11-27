@@ -1,10 +1,10 @@
 /**
- * 站点级配置。名字、仓库地址都只在这里改一次。
+ * Site-level config. The name and repo URL are each changed in exactly one place, here.
  * Language-dependent text (tagline, descriptions, nav labels, part titles, status and kind labels)
  * lives in src/i18n/ui.ts; this file only holds what is the same in every language.
  */
 export const site = {
-  /** 项目名（暂定）。页头、标题、页脚大字都读这里 */
+  /** Project name (tentative). Read here by the header, the page title, and the footer's big type */
   name: 'otter',
   version: 'v0.1',
   repo: 'https://github.com/OtterLLM/otter-handbook',
@@ -18,7 +18,7 @@ export const site = {
   ],
 } as const;
 
-/** 手册的三个部分，决定目录分组与架构图上的分区（标题和导语见 ui.parts） */
+/** The handbook's three parts, deciding the table-of-contents grouping and the sections on the architecture diagram (titles and leads are in ui.parts) */
 export const parts = {
   model: { no: 'I', en: 'MODEL' },
   training: { no: 'II', en: 'TRAINING' },

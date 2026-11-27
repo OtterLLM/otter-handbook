@@ -1,12 +1,15 @@
 ---
 /**
- * 目录：三个部分，每一章一行。
- * 指针划过某一行的时候，旁边会跟着一张小卡片，上面是那一章的小图（只在有鼠标的宽屏上）。
+ * Table of contents: three parts, one row per chapter.
+ * Hovering a row brings up a small card next to it with that chapter's figure (only on wide
+ * screens with a mouse).
  *
  * props
- *   current  当前所在的章节：那一行会标出来
- *   named    给每个标题起一个「换页动画」用的名字，点进去的时候标题会从这一行长到章节页的大标题上。
- *            同一页上同一章只能有一处起名，所以一页里放了两份目录的话，第二份要关掉
+ *   current  the current chapter: that row gets marked
+ *   named    gives each title a name for the "page transition" animation, so the title grows from
+ *            this row into the chapter page's heading when clicked.
+ *            Only one spot per chapter per page can claim the name, so if a page shows two tables
+ *            of contents, the second one needs this turned off
  */
 import { contentLangAttr, groupByPart, pad2, subtitle, type Chapter } from '../lib/handbook';
 import { url } from '../lib/url';
@@ -97,7 +100,7 @@ const groups = groupByPart(chapters, lang);
         card.classList.remove('is-on');
       });
     });
-    // 卡片跟着指针走，落在它的右上方
+    // the card follows the pointer, landing above and to its right
     toc.addEventListener(
       'pointermove',
       (e) => (card.style.transform = `translate3d(${Math.min(e.clientX + 26, innerWidth - 310)}px, ${e.clientY - 150}px, 0)`),

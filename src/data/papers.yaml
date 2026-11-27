@@ -121,7 +121,7 @@
   url: https://arxiv.org/abs/2305.07759
   components: [data, evaluation]
 
-# ── 前沿结构：架构图上那些缩写的出处 ──────────────────────────
+# ── frontier architectures: sources for the abbreviations on the diagram ──────────────────────────
 
 - id: kimi-linear-2025
   title: "Kimi Linear: An Expressive, Efficient Attention Architecture"

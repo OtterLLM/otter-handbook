@@ -1,11 +1,12 @@
 /* ───────────────────────────────────────────────────────────────
-   otter · 第二版 —— 设计系统
-   整个站当成一张「印样」来做：纸、墨，外加一块克莱因蓝的专色版。
-   图像一律是网点印出来的；装饰只用印刷本身的东西 —— 套准线、色标、版号。
+   otter · v2 -- design system
+   The whole site is treated as a "proof": paper, ink, plus one Klein-blue spot color.
+   Images are always printed as halftones; decoration uses nothing but the tools of printing
+   itself -- registration marks, color swatches, plate numbers.
    ─────────────────────────────────────────────────────────────── */
 
 :root {
-  /* 纸与墨 */
+  /* paper and ink */
   --paper: #f5f2e9;
   --paper-2: #ece8dc;
   --paper-3: #e1dccd;
@@ -16,20 +17,20 @@
   --rule: rgb(22 22 26 / 0.13);
   --rule-2: rgb(22 22 26 / 0.34);
 
-  /* 专色：克莱因蓝。只做点缀 */
+  /* spot color: Klein blue. Used only for accents */
   --accent: #002fa7;
   --accent-ink: #002fa7;
   --on-accent: #ffffff;
   --accent-wash: rgb(0 47 167 / 0.07);
 
-  /* 五种批注各自的颜色 */
+  /* colors for each of the five callout kinds */
   --c-blue: #002fa7;
   --c-green: #3d7a4c;
   --c-amber: #a8731a;
   --c-coral: #c5482e;
   --c-slate: #5b6472;
 
-  /* 封面那张网点画用的两块版 */
+  /* the two plates used for the cover's halftone image */
   --print-ink: #16161a;
   --print-blue: #002fa7;
 
@@ -74,7 +75,7 @@
   color-scheme: dark;
 }
 
-/* ── 底子 ─────────────────────────────────────────────────── */
+/* ── base ─────────────────────────────────────────────────── */
 
 *,
 *::before,
@@ -94,7 +95,7 @@ html {
   }
 }
 
-/* 换页的时候整页交叉淡入；同名的元素（比如章节标题）会从上一页「长」到下一页 */
+/* cross-fade the whole page on navigation; elements with the same name (e.g. a chapter title) "grow" from the previous page into the next */
 @view-transition {
   navigation: auto;
 }
@@ -109,7 +110,7 @@ body {
   overflow-x: clip;
 }
 
-/* 纸的颗粒：一层很淡的噪点，盖在所有东西上面 */
+/* paper grain: a very faint layer of noise over everything */
 body::after {
   content: '';
   position: fixed;
@@ -192,13 +193,13 @@ svg {
   background: var(--accent);
 }
 
-/* ── 字 ───────────────────────────────────────────────────── */
+/* ── type ───────────────────────────────────────────────────── */
 
 .mono {
   font-family: var(--font-mono);
 }
 
-/* 小标签：等宽、全大写、拉开字距。全站的「印刷小字」都是它 */
+/* small label: monospace, all caps, tracked out. Every bit of "print fine print" on the site uses this */
 .label {
   font: 500 11px / 1.5 var(--font-mono);
   letter-spacing: 0.12em;
@@ -214,7 +215,7 @@ svg {
   color: var(--accent-ink);
 }
 
-/* 网点填的大字：拿一层小圆点当「墨」，只印在字的形状里 */
+/* halftone-filled display text: a layer of small dots as "ink", printed only within the letter shapes */
 .dots {
   color: transparent;
   background-image: radial-gradient(circle at center, var(--ink) 0 34%, transparent 36%);
@@ -223,7 +224,7 @@ svg {
   background-clip: text;
 }
 
-/* ── 版心 ─────────────────────────────────────────────────── */
+/* ── measure ─────────────────────────────────────────────────── */
 
 .wrap {
   width: 100%;
@@ -245,7 +246,7 @@ main {
   padding-block: clamp(56px, 8vw, 120px);
 }
 
-/* ── 页头 ─────────────────────────────────────────────────── */
+/* ── header ─────────────────────────────────────────────────── */
 
 .site-header {
   position: sticky;
@@ -266,7 +267,7 @@ main {
   height: 100%;
 }
 
-/* 读到哪了：页头底下一道蓝线，跟着滚动条走 */
+/* reading progress: a blue line under the header that tracks the scrollbar */
 .site-header::after {
   content: '';
   position: absolute;
@@ -390,7 +391,7 @@ main {
   height: 16px;
 }
 
-/* 语言切换：EN / 中文，当前语言高亮；两个链接指向同一页的两种语言 */
+/* language switch: EN / Chinese, current language highlighted; the two links point to the two language versions of the same page */
 .lang-switch {
   display: flex;
   align-items: center;
@@ -423,7 +424,7 @@ main {
   background: var(--accent-wash);
 }
 
-/* 英文站：Instrument Serif 只有常规字重，不要合成粗体；标题的字距也收回来 */
+/* English site: Instrument Serif only has a regular weight, so don't synthesize bold; headings also get tighter tracking */
 html[lang='en'] {
   font-synthesis-weight: none;
 }
@@ -433,7 +434,7 @@ html[lang='en'] .prose h2 {
   letter-spacing: -0.005em;
 }
 
-/* 英文副标题（The small-model training handbook）比「小模型训练手册」宽两倍多：页头一行放得下之前先不显示 */
+/* The English subtitle (The small-model training handbook) is more than twice as wide as the Chinese one: hide it until the header row has room */
 @media (max-width: 1100px) {
   html[lang='en'] .brand-sub {
     display: none;
@@ -459,7 +460,7 @@ html[lang='en'] .prose h2 {
   }
 }
 
-/* 窄屏：页头一行放不下就收一收 —— 只留图标、导航可横向滑动、GitHub 图标让位给语言切换 */
+/* narrow screens: shrink the header row when it won't fit -- keep only the icon, let the nav scroll horizontally, and give up the GitHub icon in favor of the language switch */
 @media (max-width: 560px) {
   .site-header .wrap {
     gap: 8px;
@@ -496,7 +497,7 @@ html[lang='en'] .prose h2 {
   }
 }
 
-/* ── 按钮 ─────────────────────────────────────────────────── */
+/* ── buttons ─────────────────────────────────────────────────── */
 
 .btn {
   position: relative;
@@ -542,9 +543,9 @@ html[lang='en'] .prose h2 {
   border-color: transparent;
 }
 
-/* ── 小零件 ───────────────────────────────────────────────── */
+/* ── small parts ───────────────────────────────────────────────── */
 
-/* 状态：未动笔 / 草稿 / 待校对 / 已成稿 */
+/* status: planned / draft / in review / stable */
 .status {
   display: inline-flex;
   align-items: center;
@@ -578,7 +579,7 @@ html[lang='en'] .prose h2 {
   color: var(--accent-ink);
 }
 
-/* 进度：一条细线 */
+/* progress: a thin line */
 .meter {
   position: relative;
   display: block;
@@ -605,7 +606,7 @@ html[lang='en'] .prose h2 {
   border-radius: 999px;
 }
 
-/* 批注的种类：◆ 观察 ◇ 文献 ▲ 配方 ✕ 坑 ? 存疑 */
+/* kinds of callout: ◆ observation ◇ literature ▲ recipe ✕ pitfall ? open question */
 .kind {
   --c: var(--c-slate);
   display: inline-flex;
@@ -632,7 +633,7 @@ html[lang='en'] .prose h2 {
   --c: var(--c-amber);
 }
 
-/* 套准线：印刷品四角的十字 */
+/* registration mark: the cross in a printed piece's corners */
 .reg {
   position: absolute;
   width: 15px;
@@ -652,7 +653,7 @@ html[lang='en'] .prose h2 {
   border-radius: 50%;
 }
 
-/* ── 小节的标题 ───────────────────────────────────────────── */
+/* ── section heading ───────────────────────────────────────────── */
 
 .sh {
   display: grid;
@@ -691,7 +692,7 @@ html[lang='en'] .prose h2 {
   }
 }
 
-/* ── 进场：滚到了才显出来。没有 JS 的时候不藏 ─────────────── */
+/* ── entrance: only shows once scrolled into view. Not hidden without JS ─────────────── */
 
 @media (prefers-reduced-motion: no-preference) {
   .js .reveal {
@@ -709,7 +710,7 @@ html[lang='en'] .prose h2 {
   }
 }
 
-/* ── 页脚 ─────────────────────────────────────────────────── */
+/* ── footer ─────────────────────────────────────────────────── */
 
 .site-footer {
   position: relative;

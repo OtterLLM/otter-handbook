@@ -1,6 +1,6 @@
 /* ───────────────────────────────────────────────────────────────
-   Prose — Markdown 正文的排版
-   标题用宋体，正文用系统黑体，代码、表头、标注用等宽。
+   Prose -- typesetting for Markdown body text
+   Headings use a serif (Songti), body text the system sans, code, table headers and labels use monospace.
    ─────────────────────────────────────────────────────────────── */
 
 .prose {
@@ -20,7 +20,7 @@
   font-weight: 650;
 }
 
-/* 中文不用假斜体：强调改成着重号 */
+/* Chinese doesn't use faux italics: emphasis becomes an emphasis dot instead */
 .prose em {
   font-style: normal;
   text-emphasis: '·';
@@ -51,7 +51,7 @@
   text-decoration-color: currentColor;
 }
 
-/* ── 标题 ─────────────────────────────────────────────────── */
+/* ── headings ─────────────────────────────────────────────────── */
 
 .prose h2 {
   counter-increment: h2;
@@ -96,7 +96,7 @@
   border-top: 0;
 }
 
-/* ── 列表 ─────────────────────────────────────────────────── */
+/* ── lists ─────────────────────────────────────────────────── */
 
 .prose ul,
 .prose ol {
@@ -137,7 +137,7 @@
   margin-top: 0.3em;
 }
 
-/* ── 引用 ─────────────────────────────────────────────────── */
+/* ── blockquotes ─────────────────────────────────────────────────── */
 
 .prose blockquote {
   margin-inline: 0;
@@ -148,7 +148,7 @@
   color: var(--ink-2);
 }
 
-/* ── 代码 ─────────────────────────────────────────────────── */
+/* ── code ─────────────────────────────────────────────────── */
 
 .prose :not(pre) > code {
   padding: 0.12em 0.4em;
@@ -187,7 +187,7 @@
   font: inherit;
 }
 
-/* Shiki 给每个 token 同时写了明、暗两个颜色，这里按当前主题挑一个 */
+/* Shiki writes both a light and a dark color for every token; pick whichever matches the current theme */
 .prose pre.astro-code,
 .prose pre.astro-code span {
   color: var(--shiki-light);
@@ -202,7 +202,7 @@
   font-weight: var(--shiki-dark-font-weight, 400);
 }
 
-/* ── 表格 ─────────────────────────────────────────────────── */
+/* ── tables ─────────────────────────────────────────────────── */
 
 .prose table {
   width: 100%;
@@ -234,9 +234,9 @@
   background: var(--rule);
 }
 
-/* ── 图片与图注 ───────────────────────────────────────────────
-   单独成段的图片由 src/lib/markdown/figures.mjs 排成 <figure>；
-   ![说明](./img/a.png "图注") 里引号中的文字是图注，带图注的图块自动编号。 */
+/* ── images and captions ───────────────────────────────────────────────
+   A standalone image paragraph is wrapped into a <figure> by src/lib/markdown/figures.mjs;
+   in ![alt](./img/a.png "caption"), the quoted text is the caption, and captioned figures are numbered automatically. */
 
 .prose img,
 .prose video {
@@ -277,8 +277,8 @@
   color: var(--accent-ink);
 }
 
-/* ── 折叠块 ───────────────────────────────────────────────────
-   <details><summary>标题</summary> … </details>，适合放长日志、完整配置、推导细节 */
+/* ── collapsible blocks ───────────────────────────────────────────────
+   <details><summary>title</summary> ... </details>, good for long logs, full configs, derivation detail */
 
 .prose details {
   padding: 12px 18px;
@@ -313,7 +313,7 @@
   margin-top: 0.8em;
 }
 
-/* ── 公式 ─────────────────────────────────────────────────── */
+/* ── formulas ─────────────────────────────────────────────────── */
 
 .prose .math-block {
   padding-block: 6px;
@@ -325,7 +325,7 @@
   font-size: 1.06em;
 }
 
-/* ── 脚注 ─────────────────────────────────────────────────── */
+/* ── footnotes ─────────────────────────────────────────────────── */
 
 .prose sup a {
   padding-inline: 2px;
@@ -342,9 +342,9 @@
   color: var(--ink-2);
 }
 
-/* ── 标注块 ───────────────────────────────────────────────────
-   Markdown 里写 :::obs[标题] … :::，类型见 src/lib/markdown/callouts.mjs
-   每种标注一个颜色，扫一眼就能分清「这是我跑出来的」还是「这是论文里说的」。 */
+/* ── callouts ───────────────────────────────────────────────────
+   Written in Markdown as :::obs[title] ... :::; see the kinds in src/lib/markdown/callouts.mjs.
+   Each kind gets its own color, so a glance tells apart "I ran this myself" from "this is from a paper". */
 
 .prose .callout {
   --c: var(--c-slate);

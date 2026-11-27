@@ -1,12 +1,15 @@
 import { defineMdastPlugin } from 'satteri';
 
 /**
- * 正文里以 `/` 开头的站内链接和图片，自动补上部署的子路径。
+ * Internal links and images in the body that start with `/` automatically get the deployment's
+ * base path prepended.
  *
- * 本地开发时站点在 `/`，GitHub Pages 上在 `/otter-handbook/`。写作时照常写
- * `[注意力](/handbook/attention/)` 或 `![](/images/a.png)` 就行，构建时会变成
- * `/otter-handbook/handbook/attention/`。外链、`./` 开头的相对路径、`#锚点` 都不动。
- * Markdown 里直接写的 HTML（`<a href="/…">`、`<img src="/…">`、`<video src="/…">`）也一并处理。
+ * In local dev the site lives at `/`; on GitHub Pages it's at `/otter-handbook/`. Just write
+ * `[attention](/handbook/attention/)` or `![](/images/a.png)` as usual, and the build turns it into
+ * `/otter-handbook/handbook/attention/`. External links, relative paths starting with `./`, and
+ * `#anchor` links are all left alone.
+ * Raw HTML written directly in Markdown (`<a href="/...">`, `<img src="/...">`, `<video src="/...">`)
+ * is handled the same way.
  */
 export const basePath = (base = '/') => {
   const prefix = base.replace(/\/$/, '');

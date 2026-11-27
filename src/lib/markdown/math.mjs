@@ -4,7 +4,7 @@ import katex from 'katex';
 const render = (tex, displayMode) =>
   katex.renderToString(tex, { displayMode, throwOnError: false, strict: 'ignore' });
 
-/** `$...$` 与 `$$...$$` → KaTeX（构建期渲染，页面不带 JS）。 */
+/** `$...$` and `$$...$$` -> KaTeX (rendered at build time, so the page ships no JS for it). */
 export const math = defineMdastPlugin({
   name: 'handbook-math',
   math(node) {

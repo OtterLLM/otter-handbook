@@ -1,8 +1,9 @@
 import type { Lang } from '../i18n';
 
 /**
- * 「图上不好画的」—— 骨架装不下、但值得先知道的几件事。
- * 显示在首页架构图的下面；每条指向它所在的章节。
+ * "Things the diagram doesn't show well" -- a few points the skeleton has no room for, but
+ * worth knowing up front.
+ * Shown below the homepage's architecture diagram; each item links to the chapter it belongs to.
  * Same six items in both languages, in the same order.
  */
 const chapters = ['attention', 'attention', 'ffn', 'residual', 'residual', 'loop'] as const;

@@ -28,7 +28,7 @@ const papers = await getCollection('papers');
 <Base lang={lang}>
   <Hero lang={lang} chapters={chapters.length} notes={notes.length} papers={papers.length} latest={notes[0]?.data.date} />
 
-  {/* ── 01 地图 ─────────────────────────────────────────────── */}
+  {/* ── 01 atlas ─────────────────────────────────────────────── */}
   <section class="band" id="atlas">
     <div class="wrap pad">
       <header class="sh reveal">
@@ -65,7 +65,7 @@ const papers = await getCollection('papers');
     </div>
   </section>
 
-  {/* ── 02 目录 ─────────────────────────────────────────────── */}
+  {/* ── 02 table of contents ─────────────────────────────────────────────── */}
   <section class="band" id="contents">
     <div class="wrap pad">
       <header class="sh reveal">
@@ -79,7 +79,7 @@ const papers = await getCollection('papers');
     </div>
   </section>
 
-  {/* ── 03 观察 ─────────────────────────────────────────────── */}
+  {/* ── 03 notes ─────────────────────────────────────────────── */}
   <section class="band" id="notes">
     <div class="wrap pad">
       <header class="sh reveal">
@@ -116,7 +116,7 @@ const papers = await getCollection('papers');
     </div>
   </section>
 
-  {/* ── 04 批注 ─────────────────────────────────────────────── */}
+  {/* ── 04 callouts ─────────────────────────────────────────────── */}
   <section class="band" id="kinds">
     <div class="wrap pad">
       <header class="sh reveal">
@@ -143,7 +143,7 @@ const papers = await getCollection('papers');
     </div>
   </section>
 
-  {/* ── 结尾 ────────────────────────────────────────────────── */}
+  {/* ── outro ────────────────────────────────────────────────── */}
   <section class="band">
     <div class="wrap pad outro reveal">
       <h2>{text.home.outroTitle}<br /><em>{text.home.outroEm}</em></h2>

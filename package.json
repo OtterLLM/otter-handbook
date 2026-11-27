@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.2.0",
   "private": true,
-  "description": "otter — field notes on training small models (小模型训练手册)",
+  "description": "otter — field notes on training small models",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

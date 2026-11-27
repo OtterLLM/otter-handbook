@@ -1,10 +1,11 @@
 ---
 /**
- * 章节页。三栏：
- *   左  小地图（你在这里）
- *   中  本章结构 → 正文 → 挂在这一章下的观察与文献 → 上一章 / 下一章
- *   右  本页目录
- * 大标题和目录里那一行的标题同名，所以从目录点进来的时候，标题是「长」过来的。
+ * Chapter page. Three columns:
+ *   left    mini-map (you are here)
+ *   middle  chapter outline -> body -> notes and papers attached to this chapter -> prev / next
+ *   right   on-page contents
+ * The heading shares its name with the matching row in the table of contents, so when you click
+ * through from the contents, the title "grows" into place.
  */
 import { getCollection, render } from 'astro:content';
 import 'katex/dist/katex.min.css';
@@ -222,7 +223,7 @@ const source = `src/content/handbook/${lang}/${no}-${chapter.id}.md`;
 </Base>
 
 <script>
-  // 本页目录：读到哪一节，哪一条就亮
+  // on-page contents: highlights whichever section is currently being read
   const links = [...document.querySelectorAll<HTMLAnchorElement>('.ch-toc a')];
   if (links.length && 'IntersectionObserver' in window) {
     const byId = new Map(links.map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
