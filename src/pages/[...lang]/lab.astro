@@ -1,17 +1,31 @@
 ---
 /**
- * 试片台：只有那只海獭，和四种「印法」的开关。调造型、调光的时候用。
- * 地址栏参数：?mode=photo 选印法，?zoom=3&x=0.2&y=0.9 凑近了看。
+ * The lab: nothing but the otter and switches for the four "printing styles". Used while tuning
+ * its look and lighting.
+ * URL params: ?mode=photo picks the printing style, ?zoom=3&x=0.2&y=0.9 zooms in for a closer look.
  */
+import { getLang, htmlLang, langParams, t } from '../../i18n';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return langParams();
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+const abs = (l: 'en' | 'zh') => new URL(url('/lab/', l), Astro.site).href;
 ---
 
 <!doctype html>
-<html lang="zh-CN" data-theme="light">
+<html lang={htmlLang[lang]} data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>otter · 试片台</title>
+    <title>{text.lab.title}</title>
+    <link rel="alternate" hreflang="en" href={abs('en')} />
+    <link rel="alternate" hreflang="zh-CN" href={abs('zh')} />
+    <link rel="alternate" hreflang="x-default" href={abs('en')} />
     <style>
       :root {
         --paper: #f6f3ea;
@@ -45,28 +59,41 @@
         top: 12px;
         left: 12px;
         display: flex;
+        flex-wrap: wrap;
         gap: 6px;
         font: 12px ui-monospace, monospace;
       }
-      button {
+      button,
+      .lang {
         padding: 4px 10px;
         font: inherit;
+      }
+      .lang {
+        color: inherit;
+        text-decoration: none;
+        border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+      }
+      .lang[aria-current] {
+        font-weight: 700;
+        background: color-mix(in srgb, currentColor 12%, transparent);
       }
     </style>
   </head>
   <body>
     <div class="stage" data-stage><canvas></canvas></div>
     <div class="bar" data-no-ripple>
-      <button data-mode="halftone">网点</button>
-      <button data-mode="ascii">字符</button>
-      <button data-mode="dither">抖动</button>
-      <button data-mode="photo">照片</button>
-      <button data-theme>明 / 暗</button>
+      <button data-mode="halftone">{text.lab.modes.halftone}</button>
+      <button data-mode="ascii">{text.lab.modes.ascii}</button>
+      <button data-mode="dither">{text.lab.modes.dither}</button>
+      <button data-mode="photo">{text.lab.modes.photo}</button>
+      <button data-theme>{text.lab.theme}</button>
+      <a class="lang" href={url('/lab/', 'en')} lang="en" hreflang="en" aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
+      <a class="lang" href={url('/lab/', 'zh')} lang="zh-CN" hreflang="zh-CN" aria-current={lang === 'zh' ? 'true' : undefined}>中文</a>
     </div>
     <script>
-      import { mountOtter, type OtterHandle, type PrintMode } from '../lib/otter/renderer';
+      import { mountOtter, type OtterHandle, type PrintMode } from '../../lib/otter/renderer';
 
-      // 地址栏里可以带参数：?mode=photo 选印法；?zoom=3&x=0.2&y=0.9 凑近了看某一处（x、y 是它身子的中点落在画面的哪里）
+      // the URL can carry params: ?mode=photo picks the printing style; ?zoom=3&x=0.2&y=0.9 zooms in on a spot (x, y are where the midpoint of its body lands in frame)
       const query = new URLSearchParams(location.search);
       const num = (key: string, fallback: number) => Number(query.get(key) ?? fallback) || fallback;
       const stage = document.querySelector<HTMLElement>('[data-stage]')!;

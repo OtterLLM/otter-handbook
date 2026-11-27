@@ -1,5 +1,5 @@
 /* ───────────────────────────────────────────────────────────────
-   地图：左边一张 SVG 示意图，右边一块检视面板
+   atlas: an SVG diagram on the left, an inspector panel on the right
    ─────────────────────────────────────────────────────────────── */
 
 .atlas {
@@ -25,7 +25,7 @@
   padding: 8px;
 }
 
-/* 小地图下面的一行提示，只在能放大的设备上显示（见下面的媒体查询） */
+/* a hint line under the mini-map, shown only on devices that can zoom (see the media query below) */
 .atlas-hint {
   display: none;
   font: 400 11px/1.5 var(--font-mono);
@@ -33,9 +33,11 @@
   color: var(--ink-4);
 }
 
-/* 章节页侧栏的小地图太小，字看不清、框也不好点：
-   有鼠标的宽屏上，指针移上去（或用 Tab 聚焦到某个框）时，以左上角为原点放大，浮在正文上面。
-   放大是 transform，命中区域跟着变大，指针在放大后的图上移动不会让它缩回去。 */
+/* The mini-map in a chapter page's sidebar is too small: the text is hard to read and the boxes
+   are hard to click. On wide screens with a mouse, hovering (or Tab-focusing a box) zooms it in
+   from the top-left corner, floating above the body text.
+   The zoom is a transform, so the hit area scales with it, and moving the pointer within the
+   zoomed map never shrinks it back down. */
 @media (hover: hover) and (pointer: fine) and (min-width: 821px) and (min-height: 640px) {
   .atlas-compact .atlas-map {
     --atlas-zoom: 2.6;
@@ -46,7 +48,7 @@
   }
 
   .atlas-compact:is(:hover, :focus-within) .atlas-map {
-    /* --atlas-shift 由 Atlas.astro 的脚本算出：放大后超出窗口底部时往上挪 */
+    /* --atlas-shift is computed by Atlas.astro's script: shifts up when the zoomed map would overflow the bottom of the window */
     transform: translateY(var(--atlas-shift, 0px)) scale(var(--atlas-zoom));
     box-shadow:
       0 0 0 1px var(--rule-2),
@@ -78,7 +80,7 @@
   font-family: var(--font-mono);
 }
 
-/* ── 线 ── */
+/* ── lines ── */
 
 .atlas .w {
   fill: none;
@@ -164,7 +166,7 @@
   }
 }
 
-/* ── 字 ── */
+/* ── type ── */
 
 .atlas .t-note,
 .atlas .t-var,
@@ -193,7 +195,12 @@
   fill: var(--ink-3);
 }
 
-/* ── 框：每一个都是一章的入口 ── */
+/* this cell is sized for a two-to-five-character Chinese title; English titles run much longer, so shrink the font a bit (so INFERENCE · Inference & sampling still fits) */
+.atlas .node:not(.node-text) .n-zh:lang(en) {
+  font-size: 11px;
+}
+
+/* ── boxes: each one links to a chapter ── */
 
 .atlas .node rect {
   fill: var(--paper);
@@ -257,7 +264,7 @@
   outline: none;
 }
 
-/* 选中一个组件的时候，和它有关的线、小字跟着亮 */
+/* when a component is selected, its related lines and labels light up too */
 .atlas[data-active='residual'] .w-skip,
 .atlas[data-active='loop'] .w-loop {
   stroke: var(--accent-ink);
@@ -281,7 +288,7 @@
   fill: var(--accent-ink);
 }
 
-/* ── 检视面板 ── */
+/* ── inspector panel ── */
 
 .insp {
   position: sticky;
@@ -444,7 +451,7 @@
   }
 }
 
-/* 窄屏上图会缩得很小：让它可以横向滑 */
+/* on narrow screens the diagram shrinks too much: let it scroll horizontally instead */
 @media (max-width: 640px) {
   .atlas-map {
     overflow-x: auto;

@@ -1,0 +1,177 @@
+---
+/** About: what this is, how to read it, how to contribute. The text is all placeholder — edit it to fit. */
+import '../../styles/prose.css';
+import '../../styles/inner.css';
+import Base from '../../layouts/Base.astro';
+import { kinds } from '../../site.config';
+import { url } from '../../lib/url';
+import { getLang, langParams, t } from '../../i18n';
+
+export function getStaticPaths() {
+  return langParams();
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+---
+
+<Base lang={lang} title={text.about.title} description={text.about.description}>
+  <section class="ph">
+    <div class="wrap">
+      <p class="crumbs label"><span class="accent">§</span><span>About</span></p>
+      <div class="ph-title">
+        <div>
+          <h1>{text.about.title}</h1>
+          <p class="ph-en">{text.about.sub}</p>
+        </div>
+      </div>
+      <p class="ph-lead">{text.site.description}</p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <article class="prose page-body" style="--chapter:'A'">
+      {
+        lang === 'zh' ? (
+          <>
+        <h2 id="why">为什么写它</h2>
+        <p>
+          占位：在这里写你的动机。比如 —— 小模型训练得快、试错便宜，很多在大模型上「默认正确」的做法，换到小模型上值得重新验证一遍；而这些零散的验证结果，需要一个按结构组织的地方来存放。
+        </p>
+
+        <h2 id="conventions">阅读约定</h2>
+        <p>手册里的每一条结论都标明来源。五种标注块，对应五种不同的可信程度：</p>
+        <table>
+          <thead>
+            <tr><th>标记</th><th>名称</th><th>含义</th><th>Markdown 写法</th></tr>
+          </thead>
+          <tbody>
+            {
+              (Object.entries(kinds) as [keyof typeof kinds, (typeof kinds)[keyof typeof kinds]][]).map(([key, k]) => (
+                <tr>
+                  <td>{k.mark}</td>
+                  <td>{text.kinds[key].label}</td>
+                  <td>{text.kinds[key].desc}</td>
+                  <td><code>:::{key}[标题]</code></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+
+        <h2 id="contribute">如何贡献</h2>
+        <p>内容全部是仓库里的文本文件，三种东西各有一个位置：</p>
+        <table>
+          <thead>
+            <tr><th>要加什么</th><th>改哪里</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>一条观察</td>
+              <td><code>src/content/notes/&lt;en|zh&gt;/*.md</code></td>
+              <td>frontmatter 里用 <code>components</code> 写上它属于哪些章节</td>
+            </tr>
+            <tr>
+              <td>一篇文献</td>
+              <td><code>src/data/papers.yaml</code></td>
+              <td>一条一篇，<code>takeaway</code> 写英文一句话结论，<code>takeaway_zh</code> 写中文</td>
+            </tr>
+            <tr>
+              <td>章节正文</td>
+              <td><code>src/content/handbook/&lt;en|zh&gt;/NN-*.md</code></td>
+              <td>frontmatter 的 <code>categories</code> 决定架构图旁边面板里的内容</td>
+            </tr>
+            <tr>
+              <td>图上的新组件</td>
+              <td><code>src/components/Atlas.astro</code></td>
+              <td>在图纸那一段加一个框，再建同名章节；想配一张小图就去 <code>src/lib/figs.ts</code> 加一个</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre class="term"><span class="p">$</span> npm install
+<span class="p">$</span> npm run dev      <span class="c"># http://localhost:4321</span>
+<span class="p">$</span> npm run build    <span class="c"># 输出到 dist/，纯静态</span></pre>
+
+        <h2 id="cover">封面那只海獭</h2>
+        <p>
+          它不是一张图片，是一段着色器：身子、脑袋、脚蹼都是用距离场捏出来的，外面套一层毛 —— 每一帧现算光照、软阴影和一根一根的毛，再分成黑、蓝两块版，各自套一层网点「印」到纸面上。所以它会看着你的指针，点一下水面会起涟漪，点它会掂两下石头。封面底下可以换成字符、抖动，或者直接看没过印刷机的原片；<a href={url('/lab/', lang)}>试片台</a>上只有它。
+        </p>
+
+        <h2 id="license">许可</h2>
+        <p>文字内容采用 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hans" rel="noopener">CC BY 4.0</a>：可以转载、改编，注明出处即可。代码采用 MIT 许可证。</p>
+      </>
+        ) : (
+          <>
+        <h2 id="why">Why write it</h2>
+        <p>
+          Placeholder: write your motivation here. For instance — small models train fast and trial and error is cheap, so many practices that are “correct by default” on large models deserve a fresh check at small scale; and those scattered results need a place to live, organised by structure.
+        </p>
+
+        <h2 id="conventions">Reading conventions</h2>
+        <p>Every conclusion in the handbook states its source. Five kinds of callout, for five levels of trust:</p>
+        <table>
+          <thead>
+            <tr><th>Mark</th><th>Name</th><th>Meaning</th><th>Markdown</th></tr>
+          </thead>
+          <tbody>
+            {
+              (Object.entries(kinds) as [keyof typeof kinds, (typeof kinds)[keyof typeof kinds]][]).map(([key, k]) => (
+                <tr>
+                  <td>{k.mark}</td>
+                  <td>{text.kinds[key].label}</td>
+                  <td>{text.kinds[key].desc}</td>
+                  <td><code>:::{key}[title]</code></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+
+        <h2 id="contribute">How to contribute</h2>
+        <p>All content is plain text files in the repository; each kind of thing has one place:</p>
+        <table>
+          <thead>
+            <tr><th>To add</th><th>Edit</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A note</td>
+              <td><code>src/content/notes/&lt;en|zh&gt;/*.md</code></td>
+              <td>In the frontmatter, use <code>components</code> to say which chapters it belongs to</td>
+            </tr>
+            <tr>
+              <td>A paper</td>
+              <td><code>src/data/papers.yaml</code></td>
+              <td>One entry per paper; <code>takeaway</code> is the one-line conclusion in English, <code>takeaway_zh</code> in Chinese</td>
+            </tr>
+            <tr>
+              <td>Chapter text</td>
+              <td><code>src/content/handbook/&lt;en|zh&gt;/NN-*.md</code></td>
+              <td>The frontmatter <code>categories</code> decide what the panel next to the architecture diagram shows</td>
+            </tr>
+            <tr>
+              <td>A new component on the map</td>
+              <td><code>src/components/Atlas.astro</code></td>
+              <td>Add a box in the drawing section and create a chapter of the same name; for a small animation, add one to <code>src/lib/figs.ts</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <pre class="term"><span class="p">$</span> npm install
+<span class="p">$</span> npm run dev      <span class="c"># http://localhost:4321</span>
+<span class="p">$</span> npm run build    <span class="c"># outputs to dist/, fully static</span></pre>
+
+        <h2 id="cover">The otter on the cover</h2>
+        <p>
+          It is not an image but a shader: the body, head and flippers are sculpted from distance fields and wrapped in a layer of fur — every frame computes the lighting, soft shadows and individual hairs live, then splits the result into black and blue plates and “prints” each through its own halftone screen onto the paper. That is why it watches your pointer, ripples when you click the water, and tosses its stone a couple of times when you click it. Below the cover you can switch to characters, dithering, or the unprinted original; the <a href={url('/lab/', lang)}>lab</a> has nothing but the otter.
+        </p>
+
+        <h2 id="license">License</h2>
+        <p>The text is licensed under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>: reuse and adapt it freely with attribution. The code is under the MIT license.</p>
+      </>
+        )
+      }
+      </article>
+    </div>
+  </section>
+</Base>

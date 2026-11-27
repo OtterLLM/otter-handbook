@@ -1,33 +1,39 @@
 ---
 /**
- * 地图：一副通用的模型骨架，也是全书的目录。
+ * The atlas: a generic model skeleton that also serves as the whole book's table of contents.
  *
- * 左边是一张 SVG 示意图 —— 数据从下往上流过每一个组件，损失的梯度沿虚线绕回去；
- * 图上每个框是一章，框右边的小字是「这个位置有哪几类做法」。
- * 右边是检视面板：指针移到哪个框上，就显示那一章的分类、进度，和一张会动的小图。
- * 触屏上第一下是选中，第二下才跳转。
+ * On the left is an SVG diagram -- data flows bottom to top through every component, and the
+ * loss's gradient loops back along a dashed line;
+ * each box on the map is a chapter, and the small text to its right lists "what kinds of
+ * approaches belong here".
+ * On the right is the inspector panel: hovering a box shows that chapter's categories, progress,
+ * and a small animated figure.
+ * On touch, the first tap selects; the second jumps to the chapter.
  *
  * props
- *   current  当前所在的章节（章节页用：一直高亮它，面板默认显示它）
- *   compact  只要图，不要面板（章节页侧栏用）
+ *   current  the current chapter (used on chapter pages: keeps it highlighted, panel defaults to it)
+ *   compact  map only, no panel (used in the chapter page's sidebar)
  */
-import { getChapters, getOutline, pad2 } from '../lib/handbook';
-import { parts, statusLabel } from '../site.config';
+import { getChapters, getOutline, pad2, subtitle, contentLangAttr } from '../lib/handbook';
+import { parts } from '../site.config';
 import { url } from '../lib/url';
+import { t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   current?: string;
   compact?: boolean;
 }
 
-const { current = '', compact = false } = Astro.props;
+const { lang, current = '', compact = false } = Astro.props;
+const text = t(lang);
 
-const chapters = await getChapters();
+const chapters = await getChapters(lang);
 const by = Object.fromEntries(chapters.map((c) => [c.id, c]));
 const outlines = Object.fromEntries(await Promise.all(chapters.map(async (c) => [c.id, await getOutline(c)] as const)));
 
-// ── 图纸 ──────────────────────────────────────────────────
-const X = 150; //   主干上的框从哪一列开始
+// ── drawing ──────────────────────────────────────────────────
+const X = 150; //   which column the boxes on the main trunk start at
 const W = 200;
 const MID = X + W / 2;
 const main = [
@@ -44,11 +50,16 @@ const main = [
   { id: 'data', y: 592, h: 36, dashed: true },
 ];
 const racks = [
-  { part: parts.training, x: 590, y: 40, ids: ['optimizer', 'schedule', 'regularization', 'initialization'] },
-  { part: parts.after, x: 590, y: 340, ids: ['evaluation', 'distillation', 'quantization', 'inference'] },
+  { part: parts.training, key: 'training' as const, x: 590, y: 40, ids: ['optimizer', 'schedule', 'regularization', 'initialization'] },
+  { part: parts.after, key: 'after' as const, x: 590, y: 340, ids: ['evaluation', 'distillation', 'quantization', 'inference'] },
 ];
 const variants = (id: string) => (by[id]?.data.variants ?? '').split(/\s+/).filter(Boolean).join(' · ');
-const href = (id: string) => url(`/handbook/${id}/`);
+const href = (id: string) => url(`/handbook/${id}/`, lang);
+// Accessible name of a box: number, title, and the secondary name when it is in the same language family
+const aria = (id: string, full = true) => {
+  const c = by[id]!;
+  return [no(id), c.data.title, full && c.contentLang === 'zh' ? c.data.en : ''].filter(Boolean).join(' ');
+};
 const no = (id: string) => pad2(by[id]!.data.order);
 
 const done = chapters.filter((c) => c.data.status !== 'planned').length;
@@ -56,23 +67,23 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
 
 <figure class:list={['atlas', { 'atlas-compact': compact }]} data-atlas data-active={current} data-current={current || undefined}>
   <div class="atlas-map">
-    <svg viewBox="0 0 880 640" role="group" aria-label="模型架构图：每个框是一章">
+    <svg viewBox="0 0 880 640" role="group" aria-label={text.atlas.aria}>
       <defs>
         <marker id="tip" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 8 4 0 8z" fill="context-stroke"></path>
         </marker>
       </defs>
 
-      <!-- 循环：框住的那一摞会重复 L 层、再整个绕 T 圈 -->
+      {/* loop: the boxed stack repeats L layers, and the whole thing loops T times */}
       <rect class="w-loop" x="34" y="170" width="338" height="238" rx="8"></rect>
 
-      <!-- 主干：token 从下往上流 -->
+      {/* main trunk: tokens flow bottom to top */}
       <path class="w" d={`M${MID} 592V48`}></path>
       <g class="tokens" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => <circle r="3" style={`--i:${i}`} />)}
       </g>
 
-      <!-- 残差：绕过去，再加回来 -->
+      {/* residual: detours around, then adds back in */}
       <path class="w w-skip" d={`M${MID} 402H96V302H${MID - 9}`} marker-end="url(#tip)"></path>
       <path class="w w-skip" d={`M${MID} 290H96V190H${MID - 9}`} marker-end="url(#tip)"></path>
       {
@@ -84,15 +95,15 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
         ))
       }
 
-      <!-- 梯度：从损失出发，经过训练那一栏，回到模型里更新参数 -->
+      {/* gradient: starts at the loss, passes through the training column, and comes back into the model to update parameters */}
       <path class="w w-grad" d="M350 29H725V40" marker-end="url(#tip)"></path>
       <path class="w w-grad" d="M590 157H574V302H374" marker-end="url(#tip)"></path>
       <text class="t-note t-grad" x="538" y="22">∂L / ∂θ</text>
-      <text class="t-note t-grad" x="566" y="318" text-anchor="end">更新参数</text>
+      <text class="t-note t-grad" x="566" y="318" text-anchor="end">{text.atlas.updateParams}</text>
       <path class="w" d="M725 274V338" marker-end="url(#tip)"></path>
-      <text class="t-note" x="735" y="311">训练完</text>
+      <text class="t-note" x="735" y="311">{text.atlas.trained}</text>
 
-      <!-- 框右边的小字：这个位置有哪几类做法 -->
+      {/* small text to the right of each box: what kinds of approaches belong here */}
       <g class="variants" aria-hidden="true">
         {
           main
@@ -106,16 +117,16 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
         <text class="t-var v-residual" x={X + W + 16} y="193.5">{variants('residual')}</text>
       </g>
 
-      <!-- 08 循环：标签本身就是入口 -->
-      <a class="node node-text" href={href('loop')} data-id="loop" aria-label={`${no('loop')} ${by.loop!.data.title}`}>
+      {/* 08 loop: the label itself is the link */}
+      <a class="node node-text" href={href('loop')} data-id="loop" aria-label={aria('loop', false)}>
         <rect x="30" y="146" width="232" height="20" rx="3"></rect>
         <text class="n-no" x="36" y="160">{no('loop')}</text>
         <text class="n-label" x="60" y="160.5">LOOP</text>
-        <text class="n-zh" x="104" y="160">× L 层 · × T 圈</text>
+        <text class="n-zh" x="104" y="160">{text.atlas.loopLabel}</text>
       </a>
 
-      <!-- 07 残差：挂在旁路上的一枚小牌子 -->
-      <a class="node node-pill" href={href('residual')} data-id="residual" aria-label={`${no('residual')} ${by.residual!.data.title}`}>
+      {/* 07 residual: a small tag hanging on the bypass */}
+      <a class="node node-pill" href={href('residual')} data-id="residual" aria-label={aria('residual', false)}>
         <rect x="46" y="226" width="100" height="26" rx="13"></rect>
         <text class="n-no" x="58" y="243">{no('residual')}</text>
         <text class="n-label" x="78" y="243.5">RESIDUAL</text>
@@ -131,7 +142,7 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               class:list={['node', { 'node-thin': thin, 'node-dashed': b.dashed }]}
               href={href(b.id)}
               data-id={b.id}
-              aria-label={`${no(b.id)} ${c.data.title} ${c.data.en}`}
+              aria-label={aria(b.id)}
             >
               <rect x={X} y={b.y} width={W} height={b.h} rx="3" />
               <text class="n-no" x={X + 12} y={cy + 3.5}>{no(b.id)}</text>
@@ -150,17 +161,17 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               {rack.part.no} · {rack.part.en}
             </text>
             <text class="t-rack-zh" x={rack.x + 256} y={rack.y + 24} text-anchor="end">
-              {rack.part.zh}
+              {text.parts[rack.key].title}
             </text>
             {rack.ids.map((id, i) => {
               const c = by[id]!;
               const y = rack.y + 38 + i * 48;
               return (
-                <a class="node" href={href(id)} data-id={id} aria-label={`${no(id)} ${c.data.title} ${c.data.en}`}>
+                <a class="node" href={href(id)} data-id={id} aria-label={aria(id)}>
                   <rect x={rack.x + 14} y={y} width="242" height="38" rx="3" />
                   <text class="n-no" x={rack.x + 26} y={y + 22.5}>{no(id)}</text>
                   <text class="n-label" x={rack.x + 50} y={y + 23.5}>{c.data.label}</text>
-                  <text class="n-zh" x={rack.x + 245} y={y + 23} text-anchor="end">{c.data.title}</text>
+                  <text class="n-zh" x={rack.x + 245} y={y + 23} text-anchor="end" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</text>
                 </a>
               );
             })}
@@ -174,17 +185,17 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
     !compact && (
       <aside class="insp" aria-live="polite">
         <article class="panel" data-panel="default" hidden={!!current}>
-          <p class="label">Inspect</p>
-          <h3 class="panel-idle">把指针移到任意一个组件上。</h3>
-          <p class="panel-blurb">它在手册里拆成哪几类、写到哪一步了，这里都会显示；点进去就是那一章。</p>
+          <p class="label">{text.atlas.inspect}</p>
+          <h3 class="panel-idle">{text.atlas.idle}</h3>
+          <p class="panel-blurb">{text.atlas.idleBlurb}</p>
           <ul class="legend">
-            <li><i class="lg lg-flow" />前向：token 从下往上</li>
-            <li><i class="lg lg-grad" />梯度与参数更新</li>
-            <li><i class="lg lg-skip" />残差旁路</li>
-            <li><i class="lg lg-loop" />重复 L 层，或者循环 T 圈</li>
+            <li><i class="lg lg-flow" />{text.atlas.legendFlow}</li>
+            <li><i class="lg lg-grad" />{text.atlas.legendGrad}</li>
+            <li><i class="lg lg-skip" />{text.atlas.legendSkip}</li>
+            <li><i class="lg lg-loop" />{text.atlas.legendLoop}</li>
           </ul>
           <p class="panel-progress label">
-            写作进度 <b>{pad2(done)}</b> / {pad2(chapters.length)} 章已动笔
+            {text.atlas.progress} <b>{pad2(done)}</b> / {pad2(chapters.length)} {text.atlas.progressSuffix}
             <span class="meter" style={`--p:${done / chapters.length}`} />
           </p>
         </article>
@@ -194,12 +205,12 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
             <header class="panel-head">
               <span class="panel-no">{pad2(c.data.order)}</span>
               <div>
-                <h3>{c.data.title}</h3>
-                <p class="panel-en">{c.data.en}</p>
+                <h3 lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</h3>
+                {subtitle(c) && <p class="panel-en" lang={subtitle(c)!.lang}>{subtitle(c)!.text}</p>}
               </div>
             </header>
             <canvas class="panel-fig" data-fig={c.id} aria-hidden="true" />
-            <p class="panel-blurb">{c.data.blurb}</p>
+            <p class="panel-blurb" lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.blurb}</p>
             {outlines[c.id]!.length > 0 && (
               <dl class="panel-cats">
                 {outlines[c.id]!.map((o) => (
@@ -211,10 +222,10 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
               </dl>
             )}
             <footer class="panel-foot">
-              <span class="status" data-status={c.data.status}>{statusLabel[c.data.status]}</span>
+              <span class="status" data-status={c.data.status}>{text.status[c.data.status]}</span>
               <span class="meter" style={`--p:${c.data.progress}`} />
               <a class="panel-go" href={href(c.id)}>
-                读这一章 <span class="arr">→</span>
+                {text.atlas.read} <span class="arr">→</span>
               </a>
             </footer>
           </article>
@@ -247,7 +258,7 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
       atlas.dataset.active = id;
       nodes.forEach((n) => n.classList.toggle('is-active', !!id && n.dataset.id === id));
       panels.forEach((p) => (p.hidden = p.dataset.panel !== (id || 'default')));
-      // 先画一帧（标签页在后台的时候 rAF 不跑，至少不是一块空白），再让它动起来
+      // draw one frame first (rAF doesn't run while the tab is backgrounded, so at least it's not a blank patch), then set it animating
       const canvas = fig();
       if (canvas) drawFig(canvas, canvas.dataset.fig!, performance.now() / 1000);
       if (!raf && !matchMedia('(prefers-reduced-motion: reduce)').matches) raf = requestAnimationFrame(tick);
@@ -257,7 +268,7 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
       const id = node.dataset.id!;
       node.addEventListener('pointerenter', (e) => e.pointerType !== 'touch' && show(id));
       node.addEventListener('focus', () => show(id));
-      // 触屏：第一下只是选中，第二下才跳过去
+      // touch: the first tap only selects; the second one jumps to the chapter
       node.addEventListener('click', (e) => {
         if (matchMedia('(hover: none)').matches && atlas.dataset.active !== id) {
           e.preventDefault();
@@ -266,12 +277,12 @@ const done = chapters.filter((c) => c.data.status !== 'planned').length;
       });
     });
     atlas.addEventListener('keydown', (e) => e.key === 'Escape' && show(home));
-    // 侧栏小地图：指针离开、焦点移出后，高亮回到当前章节
+    // sidebar mini-map: once the pointer leaves or focus moves out, the highlight returns to the current chapter
     if (atlas.classList.contains('atlas-compact')) {
       atlas.addEventListener('pointerleave', () => show(home));
       atlas.addEventListener('focusout', (e) => !atlas.contains(e.relatedTarget as Node | null) && show(home));
 
-      // 放大后若会超出窗口底部，就整体往上挪，但不盖住页头（放大本身由 atlas.css 的 :hover 控制）
+      // if zooming in would overflow the bottom of the window, shift the whole thing up, but never cover the header (the zoom itself is driven by atlas.css's :hover)
       const map = atlas.querySelector<HTMLElement>('.atlas-map')!;
       const place = () => {
         const zoom = parseFloat(getComputedStyle(map).getPropertyValue('--atlas-zoom')) || 1;

@@ -1,5 +1,5 @@
-# 文献库：一条一篇。components 填章节 id，会自动挂到对应章节下面。
-# takeaway 写一句话 ——「这篇对训练小模型意味着什么」。下面的条目只填了书目信息。
+# Literature library: one entry per paper. `components` takes chapter ids; entries are attached to those chapters automatically.
+# `takeaway` is one sentence in English: "what this paper means for training small models"; `takeaway_zh` is its Chinese counterpart. Entries below that only list bibliographic info have neither yet.
 
 - id: vaswani2017
   title: Attention Is All You Need
@@ -42,7 +42,8 @@
   year: 2024
   url: https://arxiv.org/abs/2412.19437
   components: [ffn]
-  takeaway: 256 选 8 + 1 共享专家的细粒度形态、无辅助损失偏置均衡与节点受限路由，确立了现代开源 MoE 的工程基准。
+  takeaway: "The fine-grained 256-choose-8 plus 1 shared expert layout, auxiliary-loss-free bias balancing, and node-limited routing set the engineering baseline for modern open-source MoE."
+  takeaway_zh: 256 选 8 + 1 共享专家的细粒度形态、无辅助损失偏置均衡与节点受限路由，确立了现代开源 MoE 的工程基准。
 
 - id: abnar2025
   title: "Parameters vs FLOPs: Scaling Laws for Optimal Sparsity for Mixture-of-Experts Language Models"
@@ -50,7 +51,8 @@
   year: 2025
   url: https://arxiv.org/abs/2501.12370
   components: [ffn]
-  takeaway: 固定总参数时稀疏度有抛物线最优点，小总参预算下过度稀疏反而掉点；阅读理解类任务在同预训练 loss 下更偏好稠密计算。
+  takeaway: "At fixed total parameters, sparsity has a parabolic optimum; under a small total-parameter budget, over-sparsifying actually hurts. At the same pretraining loss, reading-comprehension tasks favor denser compute."
+  takeaway_zh: 固定总参数时稀疏度有抛物线最优点，小总参预算下过度稀疏反而掉点；阅读理解类任务在同预训练 loss 下更偏好稠密计算。
 
 - id: ludziejewski2025
   title: "Joint MoE Scaling Laws: Mixture of Experts Can Be Memory Efficient"
@@ -59,7 +61,8 @@
   venue: ICML 2025
   url: https://arxiv.org/abs/2502.05172
   components: [ffn]
-  takeaway: 把显存约束纳入 scaling law：小专家数 MoE 配合长 token 过训练并不天然比同质量 dense 更费显存，但细粒度百专家区间仍受总参硬约束。
+  takeaway: "Brings memory constraints into the scaling law: an MoE with few experts, overtrained on long token horizons, is not inherently more memory-hungry than a dense model of equal quality, but the fine-grained hundred-expert regime is still bounded by total parameters."
+  takeaway_zh: 把显存约束纳入 scaling law：小专家数 MoE 配合长 token 过训练并不天然比同质量 dense 更费显存，但细粒度百专家区间仍受总参硬约束。
 
 - id: tian2025
   title: "Towards Greater Leverage: Scaling Laws for Efficient Mixture-of-Experts Language Models"
@@ -67,7 +70,8 @@
   year: 2025
   url: https://arxiv.org/abs/2507.17702
   components: [ffn]
-  takeaway: 激活比 A 是 MoE 效率杠杆的主效应（幂律单调），专家粒度 G 在 8–12 呈平坦最优，共享专家给 1 个即可；但 MoE 最优 batch size 显著大于同算力 dense。
+  takeaway: "Activation ratio A is the main lever of MoE efficiency (monotonic power law); expert granularity G is flat-optimal at 8-12, and one shared expert suffices. However, the optimal MoE batch size is markedly larger than for a dense model at equal compute."
+  takeaway_zh: 激活比 A 是 MoE 效率杠杆的主效应（幂律单调），专家粒度 G 在 8–12 呈平坦最优，共享专家给 1 个即可；但 MoE 最优 batch size 显著大于同算力 dense。
 
 - id: kimi-k2-2025
   title: "Kimi K2: Open Agentic Intelligence"
@@ -75,7 +79,8 @@
   year: 2025
   url: https://arxiv.org/abs/2507.20534
   components: [ffn]
-  takeaway: 在 Muon 下固定 top-8+1 只扩专家池，验证路由稀疏度从 8 到 64 时 loss 持续下降；停在 48（384 选 8）是向基础设施复杂度妥协。
+  takeaway: "Under Muon with top-8+1 fixed and only the expert pool growing, validation loss keeps falling as routing sparsity goes from 8 to 64; stopping at 48 (384-choose-8) is a compromise with infrastructure complexity."
+  takeaway_zh: 在 Muon 下固定 top-8+1 只扩专家池，验证路由稀疏度从 8 到 64 时 loss 持续下降；停在 48（384 选 8）是向基础设施复杂度妥协。
 
 - id: ling2-2025
   title: "Every Activation Boosted: Scaling General Reasoner to 1 Trillion Open Language Foundation"
@@ -83,7 +88,8 @@
   year: 2025
   url: https://arxiv.org/abs/2510.22115
   components: [ffn]
-  takeaway: 把 EL scaling law 落到 16B–1T 全系（256 选 8 + 1 共享），并在 0.85B 激活的小档位上实测验证了约 7× 的训练 FLOPs 杠杆。
+  takeaway: "Carries the EL scaling law across the full 16B-1T family (256-choose-8 plus 1 shared expert) and verifies a roughly 7x training-FLOPs leverage empirically at the small 0.85B-active tier."
+  takeaway_zh: 把 EL scaling law 落到 16B–1T 全系（256 选 8 + 1 共享），并在 0.85B 激活的小档位上实测验证了约 7× 的训练 FLOPs 杠杆。
 
 - id: tian2026hyper
   title: "Hyperparameter Scaling Laws Across MoE Sparsity"
@@ -91,7 +97,8 @@
   year: 2026
   url: https://arxiv.org/abs/2609.08690
   components: [ffn, optimizer, schedule]
-  takeaway: 用 1800 次实验给出 Muon 下稀疏度对最优超参的幂律修正（峰值 lr ∝ A^0.136、最优 batch ∝ A^-0.084），量化了越稀疏单专家梯度噪声越大带来的超参漂移。
+  takeaway: "From 1,800 experiments, gives power-law corrections of the optimal hyperparameters to sparsity under Muon (peak lr ∝ A^0.136, optimal batch ∝ A^-0.084), quantifying the hyperparameter drift caused by noisier per-expert gradients as sparsity grows."
+  takeaway_zh: 用 1800 次实验给出 Muon 下稀疏度对最优超参的幂律修正（峰值 lr ∝ A^0.136、最优 batch ∝ A^-0.084），量化了越稀疏单专家梯度噪声越大带来的超参漂移。
 
 - id: su2021
   title: "RoFormer: Enhanced Transformer with Rotary Position Embedding"
@@ -114,7 +121,7 @@
   url: https://arxiv.org/abs/2305.07759
   components: [data, evaluation]
 
-# ── 前沿结构：架构图上那些缩写的出处 ──────────────────────────
+# ── frontier architectures: sources for the abbreviations on the diagram ──────────────────────────
 
 - id: kimi-linear-2025
   title: "Kimi Linear: An Expressive, Efficient Attention Architecture"

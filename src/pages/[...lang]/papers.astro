@@ -1,0 +1,83 @@
+---
+/** Papers: a single table. Data lives in src/data/papers.yaml. */
+import { getCollection } from 'astro:content';
+import '../../styles/inner.css';
+import Base from '../../layouts/Base.astro';
+import { contentLangAttr, getChapters, pad2 } from '../../lib/handbook';
+import { url } from '../../lib/url';
+import { getLang, langParams, t } from '../../i18n';
+
+export function getStaticPaths() {
+  return langParams();
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+const tx = text.papers;
+
+const papers = (await getCollection('papers')).sort(
+  (a, b) => b.data.year - a.data.year || a.data.title.localeCompare(b.data.title),
+);
+const chapters = Object.fromEntries((await getChapters(lang)).map((c) => [c.id, c]));
+---
+
+<Base lang={lang} title={tx.title} description={tx.description}>
+  <section class="ph">
+    <div class="wrap">
+      <p class="crumbs label"><span class="accent">§</span><span>Papers</span></p>
+      <div class="ph-title">
+        <div>
+          <h1>{tx.title}</h1>
+          <p class="ph-en">{tx.sub}</p>
+        </div>
+      </div>
+      <p class="ph-lead">{tx.lead}</p>
+      <dl class="ph-meta">
+        <div><dt class="label">{tx.total}</dt><dd>{pad2(papers.length)} {tx.unit}</dd></div>
+        <div><dd class="label">{tx.sampleNote}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap pad">
+      <div class="papers" role="table">
+        <div class="paper paper-head label" role="row">
+          <span role="columnheader">{tx.colYear}</span>
+          <span role="columnheader">{tx.colTitle}</span>
+          <span role="columnheader">{tx.colComponents}</span>
+          <span role="columnheader">{tx.colTakeaway}</span>
+        </div>
+        {
+          papers.map((p) => (
+            <div class="paper" role="row" id={p.id}>
+              <span class="y" role="cell">{p.data.year}</span>
+              <span role="cell">
+                {p.data.url ? (
+                  <a class="t" href={p.data.url} rel="noopener">{p.data.title} ↗</a>
+                ) : (
+                  <span class="t">{p.data.title}</span>
+                )}
+                <span class="a">{p.data.authors}{p.data.venue && ` · ${p.data.venue}`}</span>
+              </span>
+              <span class="chips" role="cell">
+                {p.data.components.map((id) =>
+                  chapters[id] ? (
+                    <a class="chip" href={url(`/handbook/${id}/`, lang)}>{pad2(chapters[id].data.order)} <span lang={chapters[id].fallback ? contentLangAttr(chapters[id].contentLang) : undefined}>{chapters[id].data.title}</span></a>
+                  ) : (
+                    <span class="chip">{id}</span>
+                  ),
+                )}
+              </span>
+              {(() => {
+                const k = lang === 'zh' ? (p.data.takeaway_zh ?? p.data.takeaway) : (p.data.takeaway ?? p.data.takeaway_zh);
+                const kl = lang === 'zh' ? (p.data.takeaway_zh ? undefined : 'en') : p.data.takeaway ? undefined : 'zh-CN';
+                return k ? <span class="k" role="cell" lang={kl}>{k}</span> : <span class="k none" role="cell">{tx.none}</span>;
+              })()}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>

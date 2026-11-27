@@ -1,31 +1,31 @@
 ---
 /**
- * 封面。
+ * The cover.
  *
- * 整块封面底下铺着一张 WebGL 画布：一只仰面漂着的海獭，抱着一块克莱因蓝的石头。
- * 它是实时算出来的（src/lib/otter/），再「印」成双色网点落在纸面上 —— 所以它会看着你的指针，
- * 点一下水面会起涟漪，点它会把石头抛起来再接住。底下那一排按钮可以换一种印法。
- * 没有 WebGL2 的浏览器只会少这张画，文字都在。
+ * A WebGL canvas spans the whole cover: an otter floating on its back, holding a Klein-blue
+ * stone. It's computed in real time (src/lib/otter/), then "printed" as a two-color halftone onto
+ * the paper -- which is why it watches your pointer, ripples when you click the water, and tosses
+ * the stone up and catches it when you click it. The row of buttons below lets you switch the
+ * printing style.
+ * Browsers without WebGL2 simply lose this picture; all the text is still there.
  */
 import { fmtDate, pad2 } from '../lib/handbook';
 import { site } from '../site.config';
 import { url } from '../lib/url';
+import { t, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   chapters: number;
   notes: number;
   papers: number;
   latest?: Date;
 }
 
-const { chapters, notes, papers, latest } = Astro.props;
+const { lang, chapters, notes, papers, latest } = Astro.props;
+const text = t(lang);
 
-const modes = [
-  { id: 'halftone', zh: '网点', slug: '双色网点 · K 45° + B 15° · 4 px' },
-  { id: 'ascii', zh: '字符', slug: '字符 · 十级 · 4 × 8 px' },
-  { id: 'dither', zh: '抖动', slug: '有序抖动 · Bayer 4×4 · 2 px' },
-  { id: 'photo', zh: '原片', slug: '原片 · 光线步进 · 没过印刷机' },
-];
+const modes = (['halftone', 'ascii', 'dither', 'photo'] as const).map((id) => ({ id, ...text.hero.modes[id] }));
 ---
 
 <section class="hero" data-hero>
@@ -36,7 +36,7 @@ const modes = [
   <div class="wrap hero-wrap">
     <p class="hero-kicker label">
       <span class="blip" aria-hidden="true"></span>
-      {site.version} · 持续更新中{latest && ` · ${fmtDate(latest)}`}
+      {site.version} · {text.hero.kicker}{latest && ` · ${fmtDate(latest)}`}
     </p>
 
     <h1 class="hero-title">
@@ -44,17 +44,17 @@ const modes = [
         {[...site.name].map((ch, i) => <span style={`--i:${i}`} aria-hidden="true">{ch}</span>)}
       </span>
     </h1>
-    <p class="hero-zh">{site.nameZh}</p>
-    <p class="hero-en">{site.taglineEn}</p>
-    <p class="hero-lead">{site.tagline}记录训练小模型时的第一手观察，也汇总文献里能复用的经验。</p>
+    <p class="hero-zh">{text.site.nameSub}</p>
+    <p class="hero-en">{text.site.taglineEn}</p>
+    <p class="hero-lead">{text.site.tagline}{lang === 'en' ? ' ' : ''}{text.hero.lead}</p>
 
     <div class="hero-cta">
-      <a class="btn btn-primary" href={url('/handbook/')}>
-        开始阅读
+      <a class="btn btn-primary" href={url('/handbook/', lang)}>
+        {text.hero.start}
         <span class="arr">→</span>
       </a>
       <a class="btn" href="#atlas">
-        先看地图
+        {text.hero.map}
         <span class="arr">↓</span>
       </a>
     </div>
@@ -62,14 +62,14 @@ const modes = [
 
   <div class="wrap hero-foot">
     <p class="label hero-count">
-      <b>{pad2(chapters)}</b> 章 · <b>{pad2(notes)}</b> 条观察 · <b>{pad2(papers)}</b> 篇文献
+      <b>{pad2(chapters)}</b> {text.hero.countChapters} · <b>{pad2(notes)}</b> {text.hero.countNotes} · <b>{pad2(papers)}</b> {text.hero.countPapers}
     </p>
 
-    <div class="modes" role="radiogroup" aria-label="这张画怎么印" data-no-ripple>
+    <div class="modes" role="radiogroup" aria-label={text.hero.modesAria} data-no-ripple>
       {
         modes.map((m, i) => (
           <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-mode={m.id} data-slug={m.slug}>
-            {m.zh}
+            {m.name}
           </button>
         ))
       }
@@ -81,7 +81,7 @@ const modes = [
     </p>
   </div>
 
-  <p class="label hero-hint" aria-hidden="true">点一下水面试试 ↗</p>
+  <p class="label hero-hint" aria-hidden="true">{text.hero.hint}</p>
 </section>
 
 <script>
@@ -90,7 +90,7 @@ const modes = [
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   const canvas = hero?.querySelector('canvas');
   if (hero && canvas) {
-    // 宽屏：海獭在右边，左边留给文字；窄屏：文字在上，它在下
+    // wide screens: the otter sits on the right, leaving the left for text; narrow screens: text on top, otter below
     const wide = (w: number) => w >= 900;
     const otter = mountOtter(hero, canvas, {
       center: (w, h) => (wide(w) ? [0.705, 0.5] : [0.5, 1 - Math.min(0.31, (w * 0.545) / h)]),
@@ -109,7 +109,7 @@ const modes = [
     };
     buttons.forEach((btn, i) => {
       btn.addEventListener('click', () => choose(btn));
-      // 单选组：左右方向键换一个
+      // radio group: left/right arrow keys switch between options
       btn.addEventListener('keydown', (e) => {
         const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (!step) return;
@@ -119,10 +119,10 @@ const modes = [
       });
     });
 
-    // 点过一次水面，那句提示就不用再留着了
+    // once the water has been clicked once, that hint doesn't need to stick around
     hero.addEventListener('pointerdown', () => hero.classList.add('is-touched'), { once: true });
 
-    // 调试 / 截图用：window.__otter.renderAt(3.4)
+    // for debugging / screenshots: window.__otter.renderAt(3.4)
     (window as unknown as { __otter?: typeof otter }).__otter = otter;
   }
 </script>

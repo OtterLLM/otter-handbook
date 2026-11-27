@@ -1,0 +1,51 @@
+---
+/** The handbook's table of contents: the map first, then the list of nineteen chapters. */
+import '../../../styles/atlas.css';
+import '../../../styles/home.css';
+import '../../../styles/inner.css';
+import Base from '../../../layouts/Base.astro';
+import Atlas from '../../../components/Atlas.astro';
+import ChapterList from '../../../components/ChapterList.astro';
+import { getChapters, pad2 } from '../../../lib/handbook';
+import { getLang, langParams, t } from '../../../i18n';
+
+export function getStaticPaths() {
+  return langParams();
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang).handbook;
+const chapters = await getChapters(lang);
+const started = chapters.filter((c) => c.data.status !== 'planned').length;
+---
+
+<Base lang={lang} title={text.title} description={text.description}>
+  <section class="ph">
+    <div class="wrap">
+      <p class="crumbs label"><span class="accent">§</span><span>Handbook</span></p>
+      <div class="ph-title">
+        <div>
+          <h1>{text.title}</h1>
+          <p class="ph-en">{text.sub}</p>
+        </div>
+      </div>
+      <p class="ph-lead">{text.lead}</p>
+      <dl class="ph-meta">
+        <div><dt class="label">{text.chapters}</dt><dd>{pad2(chapters.length)}</dd></div>
+        <div><dt class="label">{text.started}</dt><dd>{pad2(started)}<span class="meter" style={`--p:${started / chapters.length}`}></span></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap pad">
+      <Atlas lang={lang} />
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap pad">
+      <ChapterList lang={lang} chapters={chapters} />
+    </div>
+  </section>
+</Base>

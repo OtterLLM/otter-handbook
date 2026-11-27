@@ -1,4 +1,4 @@
-# 每次推送到 main，自动构建并发布到 GitHub Pages。
+# On every push to main, automatically build and publish to GitHub Pages.
 name: Deploy to GitHub Pages
 
 on:
@@ -24,7 +24,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # 用 npm install 而不是 npm ci：在 Mac 上生成的 lock 文件会漏掉 Linux 上才需要的可选依赖，npm ci 会因此报错
+      # use npm install instead of npm ci: a lockfile generated on a Mac is missing optional
+      # dependencies that are only needed on Linux, which makes npm ci fail
       - run: npm install --no-audit --no-fund
       - run: npm run build
         env:

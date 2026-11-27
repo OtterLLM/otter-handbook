@@ -1,14 +1,19 @@
 /**
- * 把封面那只海獭画到一张 canvas 上（WebGL2）。
+ * Draws the cover's otter onto a canvas (WebGL2).
  *
- * 每一帧三件事：
- *   1. 摆姿势 —— 这里是它的「骨架」：头从脖子根上转（所以头的位置会跟着动，不是只有脸在滑），
- *      带一点惯性；前肢两节骨头长度固定，肘的位置由肩和爪倒推；石头是刚体，掂的时候真的离手、
- *      翻一圈、再落回爪子里；胡须比头慢半拍。
- *   2. 拍照 —— SCENE 着色器按这个姿势拍一张低分辨率的照片（颜色、分色用的版、深度）。
- *   3. 印刷 —— PRINT 着色器把照片印到整张画布上，再把胡须描上去。
- * 另外管：画布尺寸、镜头、指针、点水面起涟漪、明暗主题、看不见的时候暂停、
- * 机器吃力的时候自动降低照片分辨率。
+ * Three things happen every frame:
+ *   1. Pose it -- this is its "skeleton": the head turns from the base of the neck (so the head's
+ *      position moves with it, not just the face sliding around), with a bit of inertia; the two
+ *      forelimb bone lengths are fixed, and the elbow position is derived from the shoulder and
+ *      paw; the stone is a rigid body that, when tossed, really leaves the paw, flips over once,
+ *      and falls back in; the whiskers lag half a beat behind the head.
+ *   2. Take a photo -- the SCENE shader renders a low-resolution photo (color, the plates used for
+ *      the color separation, and depth) for this pose.
+ *   3. Print it -- the PRINT shader prints that photo across the whole canvas, then traces the
+ *      whiskers on top.
+ * Also handled here: canvas size, the camera, the pointer, ripples from clicking the water, the
+ * light/dark theme, pausing when off-screen, and automatically lowering the photo resolution when
+ * the machine is struggling.
  */
 import { PRINT_FRAG, SCENE_FRAG, VERT } from './shaders';
 
@@ -16,29 +21,29 @@ export const PRINT_MODES = ['halftone', 'ascii', 'dither', 'photo'] as const;
 export type PrintMode = (typeof PRINT_MODES)[number];
 
 export interface OtterOptions {
-  /** 海獭落在画面的哪里：0–1，原点在左上 */
+  /** where the otter sits in frame: 0-1, origin top-left */
   center(width: number, height: number): [number, number];
-  /** 它在画面上有多宽（px） */
+  /** how wide it is on screen (px) */
   span(width: number, height: number): number;
-  /** 给文字让路：水面在横向 x0→x1、纵向 y0→y1 之间才渐渐显出来（0–1，原点在左上）。不给就是整幅都有 */
+  /** make way for text: the water only fades in between x0->x1 horizontally, y0->y1 vertically (0-1, origin top-left). Omit it to cover the whole frame */
   shy?(width: number, height: number): [number, number, number, number];
 }
 
-/** 调试用：把姿势钉在某个状态上 */
+/** for debugging: pin the pose to a fixed state */
 export interface PoseOverride {
-  /** 它在看哪：−1…1 */
+  /** where it's looking: -1...1 */
   look?: [number, number];
-  /** 掂石头掂到第几秒了 */
+  /** how many seconds into the toss it is */
   toss?: number;
-  /** 眼皮合上多少：0…1 */
+  /** how much the eyelid is closed: 0...1 */
   blink?: number;
-  /** 头直接转到这个角度（弧度：左右、上下），不带歪头。看侧脸用 */
+  /** turn the head straight to this angle (radians: left-right, up-down), with no tilt. For viewing it in profile */
   turn?: [number, number];
 }
 
 export interface OtterHandle {
   mode(next: PrintMode): void;
-  /** 立刻画出第 t 秒的样子（调试、截图用） */
+  /** immediately render how it looks at second t (for debugging and screenshots) */
   renderAt(t: number, pose?: PoseOverride): void;
   destroy(): void;
 }
@@ -46,24 +51,24 @@ export interface OtterHandle {
 type V3 = [number, number, number];
 
 const GLYPHS = ' .:-=+*#%@';
-const WIDTH = 2.0; //                           海獭在画面上看起来有多宽（世界单位）
-const CAMERA: V3 = [-0.85, 2.55, 2.65]; //      镜头相对它的位置
-const TARGET: V3 = [-0.07, 0.06, 0.098]; //     镜头对着哪：它身子的中点
-const YAW = -0.95; //                           它在水面上的朝向。这三样和着色器里写的是同一组数
+const WIDTH = 2.0; //                           how wide the otter looks on screen (world units)
+const CAMERA: V3 = [-0.85, 2.55, 2.65]; //      camera position relative to it
+const TARGET: V3 = [-0.07, 0.06, 0.098]; //     what the camera points at: the midpoint of its body
+const YAW = -0.95; //                           its heading on the water. These three match the same numbers written in the shader
 
-// ── 骨架（坐标都是它自己的：身子顺着 x，头在 +x，y 朝上）──────────
-const NECK: V3 = [0.5, 0.06, 0]; //             脖子根：头绕着它转
-const HEAD_UP = 0.3; //                         头的中心在脖子根上方多远
-const HEAD_S = 1.13; //                         头整体放大了多少（和着色器里的是同一个数）
-const FACE: V3 = [-0.9703, 0.2419, 0]; //       不转头的时候脸朝哪：它抬着头，脸朝自己的脚、略微往上 —— 镜头在它斜上方约 20°，
-//                                              看到的是额头在上、鼻子和嘴在下的那张脸
+// ── skeleton (coordinates are its own: body along x, head at +x, y is up) ──────────
+const NECK: V3 = [0.5, 0.06, 0]; //             base of the neck: the head pivots around it
+const HEAD_UP = 0.3; //                         how far the head's center sits above the base of the neck
+const HEAD_S = 1.13; //                         how much the head is scaled up overall (same number as in the shader)
+const FACE: V3 = [-0.9703, 0.2419, 0]; //       which way the face points when the head isn't turned: it holds its head up, face toward its own feet and slightly upward -- the camera sits about 20 deg above and to the side,
+//                                              so the face it sees has the forehead on top, nose and mouth below
 const SHOULDER: V3 = [0.22, 0.11, 0.205];
-const BONE = 0.185; //                          上臂、前臂各多长
-const PAW_REST: V3 = [-0.03, 0.323, 0.128]; //  抱着石头的时候爪子在哪：一边一只，捧在石头两侧
-const STONE_REST: V3 = [0, 0.325, 0]; //        石头搁在肚子上（它拿肚子当桌子）：离脸远一点，抛起来也挡不住脸
+const BONE = 0.185; //                          length of the upper arm and forearm each
+const PAW_REST: V3 = [-0.03, 0.323, 0.128]; //  where the paws sit while holding the stone: one on each side, cupping it
+const STONE_REST: V3 = [0, 0.325, 0]; //        the stone rests on the belly (it treats its belly as a table): far enough from the face that tossing it doesn't block the view
 const GRAVITY = 6.4;
 
-// 胡须：每边四根，又长又密，越靠下的越往下垂。在头自己的坐标里（脸朝前、头顶朝上、侧面）定好根和梢
+// whiskers: four per side, long and dense, the lower ones drooping more. Root and tip are fixed in the head's own coordinates (face forward, crown up, sideways)
 const WHISKERS = [-1, 1].flatMap((side) =>
   (
     [
@@ -86,14 +91,14 @@ const ease = (x: number) => {
   const k = clamp(x, 0, 1);
   return k * k * (3 - 2 * k);
 };
-/** 把一对互相垂直的方向在它们所在的平面里转一个角度 */
+/** turn a pair of mutually perpendicular directions by an angle, within their shared plane */
 const turn = (a: V3, b: V3, angle: number): [V3, V3] => {
   const c = Math.cos(angle);
   const s = Math.sin(angle);
   return [add(mul(a, c), mul(b, s)), sub(mul(b, c), mul(a, s))];
 };
 
-/** 一根弹簧：有惯性，会稍微冲过头再回来 */
+/** a spring: has inertia, overshoots slightly before settling */
 interface Spring {
   x: number;
   v: number;
@@ -104,15 +109,17 @@ const pull = (s: Spring, target: number, dt: number, freq: number, damping: numb
 };
 
 /**
- * 掂一下石头：先往下一沉，往上一送，石头离手、翻一圈、落回来，爪子接住的时候再往下一沉。
- * 返回爪子和石头各自比平时高多少、石头翻到哪了、有没有离手、做完没有。
+ * Toss the stone: a dip down, a push up, the stone leaves the paw, flips over once, falls back,
+ * and the paw dips again when it's caught.
+ * Returns how much higher than usual the paw and stone each are, how far the stone has flipped,
+ * whether it's left the paw, and whether the toss is over.
  */
 function toss(age: number, power: number) {
   const v0 = Math.sqrt(2 * GRAVITY * 0.13 * power);
   const flight = (v0 + Math.sqrt(v0 * v0 + 2 * GRAVITY * 0.03)) / GRAVITY;
-  const A = 0.16; //         下沉
-  const B = A + 0.11; //     上送，到这一刻离手
-  const C = B + flight; //   落回爪子里
+  const A = 0.16; //         dip down
+  const B = A + 0.11; //     push up; leaves the paw at this moment
+  const C = B + flight; //   falls back into the paw
   const end = C + 0.42;
   if (age < A) {
     const y = -0.022 * ease(age / A);
@@ -144,7 +151,7 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string) {
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error('[otter] 着色器编译失败\n' + gl.getShaderInfoLog(shader));
+    console.error('[otter] shader compile failed\n' + gl.getShaderInfoLog(shader));
     return null;
   }
   return shader;
@@ -159,7 +166,7 @@ function link(gl: WebGL2RenderingContext, frag: string) {
   gl.attachShader(program, fs);
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error('[otter] 着色器链接失败\n' + gl.getProgramInfoLog(program));
+    console.error('[otter] shader link failed\n' + gl.getProgramInfoLog(program));
     return null;
   }
   const cache = new Map<string, WebGLUniformLocation | null>();
@@ -216,7 +223,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
   let dpr = 1;
   let sw = 0;
   let sh = 0;
-  let quality = 0.5; //    照片的分辨率是画布（CSS 像素）的几分之几
+  let quality = 0.5; //    the photo's resolution as a fraction of the canvas (CSS pixels)
   let mode: PrintMode = 'halftone';
   let center: [number, number] = [0.5, 0.5];
   let shy: [number, number, number, number] = [-1, -0.5, -1, -0.5];
@@ -231,18 +238,18 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
   let destroyed = false;
   let lastFrame = 0;
   let slow = 0;
-  let clock = -1; //       上一帧是第几秒（算每一帧隔了多久用）
+  let clock = -1; //       what second the previous frame was at (used to compute each frame's delta)
 
-  // ── 姿势的状态 ──
-  const want = { x: 0, y: 0, held: false }; //  指针想让它看哪
+  // ── pose state ──
+  const want = { x: 0, y: 0, held: false }; //  where the pointer wants it to look
   const lookX: Spring = { x: 0, v: 0 };
   const lookY: Spring = { x: 0, v: 0 };
-  const lagX: Spring = { x: 0, v: 0 }; //       胡须：比头慢半拍
+  const lagX: Spring = { x: 0, v: 0 }; //       whiskers: lag half a beat behind the head
   const lagY: Spring = { x: 0, v: 0 };
-  const sink: Spring = { x: 0, v: 0 }; //       接住石头的那一下，身子往水里一沉
-  let tossAt = -100; //                          这一次掂石头是从第几秒开始的
+  const sink: Spring = { x: 0, v: 0 }; //       the dip into the water when the stone is caught
+  let tossAt = -100; //                          what second this toss started at
   let tossPower = 1;
-  let tossAgain = 0; //                          后面还要再掂几下
+  let tossAgain = 0; //                          how many more tosses are queued up
   let nextToss = 5;
   let caught = true;
   let blinkAt = -100;
@@ -260,7 +267,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     blue = rgb(css.getPropertyValue('--print-blue'), dark ? [0.48, 0.6, 1] : [0, 0.184, 0.655]);
   };
 
-  /** 字符模式用的字形：一排，由疏到密，白字黑底 */
+  /** glyphs used for character mode: one row, sparse to dense, white on black */
   const buildGlyphs = () => {
     const w = Math.round((W < 700 ? 3 : 4) * dpr);
     const h = w * 2;
@@ -280,7 +287,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
   };
 
   const allocate = () => {
-    // 看原片的时候要拍得清楚一些；印成网点的话，一个点采一次样就够了
+    // when viewing the photo it needs to be sharper; printed as a halftone, one sample per dot is enough
     const q = mode === 'photo' ? Math.min(dpr, 1.25) * Math.min(1, quality * 2) : quality;
     sw = Math.max(2, Math.round(W * q));
     sh = Math.max(2, Math.round(H * q));
@@ -309,7 +316,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     buildGlyphs();
   };
 
-  /** 镜头：位置和三个方向。和着色器里的算法一模一样 */
+  /** camera: position and three directions. Identical to the math in the shader */
   const camera = () => {
     const eye: V3 = [TARGET[0] + CAMERA[0], TARGET[1] + CAMERA[1] + lift, TARGET[2] + CAMERA[2]];
     const ww = norm(sub(TARGET, eye));
@@ -318,14 +325,14 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     return { eye, uu, vv, ww };
   };
 
-  /** 世界里的一点落在画布的哪里（设备像素，原点在左下），以及它离镜头多远 */
+  /** where a point in the world lands on the canvas (device pixels, origin bottom-left), and how far it is from the camera */
   const project = (p: V3, cam: ReturnType<typeof camera>): [number, number, number] => {
     const d = sub(p, cam.eye);
     const z = dot(d, cam.ww);
     return [(center[0] * W + ((dot(d, cam.uu) / z) * zoom) * H) * dpr, ((1 - center[1]) * H + ((dot(d, cam.vv) / z) * zoom) * H) * dpr, z];
   };
 
-  /** 屏幕上的一点（CSS 像素，原点在画布左上）落在水面的哪里 */
+  /** where a point on screen (CSS pixels, origin top-left of the canvas) lands on the water */
   const toWater = (x: number, y: number): [number, number] | null => {
     const { eye, uu, vv, ww } = camera();
     const u = (x - center[0] * W) / H;
@@ -355,8 +362,8 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     const dt = clock < 0 || fixed ? 1 / 60 : clamp(t - clock, 0, 1 / 20);
     clock = t;
 
-    // ── 1. 摆姿势 ────────────────────────────────────────────
-    // 没人理它的时候，自己慢慢地东张西望
+    // ── 1. pose it ────────────────────────────────────────────
+    // when no one's bothering it, it slowly looks around on its own
     const tx = want.held ? want.x : 0.35 * Math.sin(t * 0.31) + 0.15 * Math.sin(t * 0.83 + 1.7);
     const ty = want.held ? want.y : 0.2 * Math.sin(t * 0.23 + 0.6);
     if (fixed?.look) {
@@ -370,12 +377,12 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
       pull(lagY, lookY.x, dt, 5.5, 0.36);
     }
 
-    // 掂石头：隔一阵自己来两下
+    // tossing the stone: every so often it does a couple on its own
     if (!still && !fixed && t > nextToss) startToss(t);
     const tossing = toss(fixed?.toss ?? t - tossAt, tossPower);
     if (!fixed) {
       if (tossing.landed && !caught) {
-        // 接住的那一下：身子一沉，胸口的水荡一圈
+        // the moment it's caught: a dip in the body, a ripple across the chest
         caught = true;
         sink.v -= 0.16 * tossPower;
         const chest = toWorld([STONE_REST[0], 0, 0], 0, 0);
@@ -396,26 +403,26 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     const blinkAge = t - blinkAt;
     const blink = fixed?.blink ?? (blinkAge < 0.07 ? blinkAge / 0.07 : blinkAge < 0.2 ? 1 - (blinkAge - 0.07) / 0.13 : 0);
 
-    // 身子：跟着水起伏、侧倾；头往哪边转，肩膀也跟过去一点
+    // body: bobs and leans with the water; the shoulders follow a bit wherever the head turns
     const bob = 0.012 * Math.sin(t * 1.3) + sink.x;
     const roll = 0.035 * Math.sin(t * 0.9 + 1.0) - lookX.x * 0.035;
     const sway = 0.16 * Math.sin(t * 1.1);
     const toe = 0.1 * Math.sin(t * 1.7) * ease((Math.sin(t * 0.37) - 0.2) / 0.8);
 
-    // 头：先左右转，再点头，再歪一点 —— 都是绕着脖子根，所以头的位置跟着走
+    // head: turns left-right, then nods, then tilts a little -- all around the base of the neck, so the head's position moves along with it
     const up0 = norm(sub([1, 0, 0], mul(FACE, FACE[0])));
     let f = FACE;
     let u = up0;
     let r = cross(FACE, up0);
     const yaw = fixed?.turn ? fixed.turn[0] : -lookX.x * 0.42;
-    // 抬头可以抬得多，低头没多少余地：下巴已经挨着胸口了
+    // it can lift its head up a lot, but there's little room to lower it further: the chin is already against the chest
     const pitch = fixed?.turn ? fixed.turn[1] : lookY.x * (lookY.x > 0 ? 0.26 : 0.1);
     [f, r] = turn(f, r, yaw);
     [f, u] = turn(f, u, pitch);
     [u, r] = turn(u, r, fixed?.turn ? 0 : -lookX.x * 0.14);
     const head = add(NECK, mul(u, HEAD_UP));
 
-    // 前肢：爪子去哪是定好的，肘由两节骨头的长度倒推（往外、往下弯）
+    // forelimb: where the paw goes is fixed, and the elbow is derived from the two fixed bone lengths (bending outward and down)
     const want_: V3 = [PAW_REST[0], PAW_REST[1] + tossing.paw, PAW_REST[2] + 0.014 * tossing.air];
     const reach = sub(want_, SHOULDER);
     const far = Math.hypot(...reach);
@@ -426,17 +433,17 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     pole = norm(sub(pole, mul(along, dot(pole, along))));
     const elbow = add(add(SHOULDER, mul(along, span / 2)), mul(pole, Math.sqrt(Math.max(0, BONE * BONE - (span / 2) ** 2))));
 
-    // 石头：刚体。抱着的时候轻轻晃，离手之后往前翻一整圈
+    // stone: a rigid body. Rocks gently while held, flips all the way over once it leaves the paw
     const stone: V3 = [STONE_REST[0], STONE_REST[1] + tossing.stone, STONE_REST[2]];
     const spin = tossing.spin * Math.PI * 2 + 0.06 * Math.sin(t * 0.8);
     const cs = Math.cos(spin);
     const sn = Math.sin(spin);
     const cy = Math.cos(0.5);
     const sy = Math.sin(0.5);
-    // 先绕竖轴转一个固定的角度（石头斜着放），再绕横轴翻
+    // first a fixed rotation around the vertical axis (the stone sits tilted), then it flips around the horizontal axis
     const stoneRot = [cy * cs, cy * sn, -sy, -sn, cs, 0, sy * cs, sy * sn, cy];
 
-    // 胡须：跟着头走，但梢比头慢半拍
+    // whiskers: follow the head, but the tip lags half a beat behind
     const cam = camera();
     WHISKERS.forEach((w, i) => {
       const tip: V3 = [w.tip[0], w.tip[1] - (lookY.x - lagY.x) * 0.16, w.tip[2] + (lookX.x - lagX.x) * 0.22];
@@ -451,7 +458,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     gl.bindVertexArray(vao);
     gl.disable(gl.BLEND);
 
-    // ── 2. 拍照 ──────────────────────────────────────────────
+    // ── 2. take a photo ──────────────────────────────────────────────
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, sw, sh);
     gl.useProgram(scene.program);
@@ -473,7 +480,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     gl.uniform1f(scene.at('uBlink'), blink);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    // ── 3. 印刷 ──────────────────────────────────────────────
+    // ── 3. print it ──────────────────────────────────────────────
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
@@ -505,7 +512,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
-  /** 它自己坐标里的一点，在世界里是哪（把起伏、侧倾、朝向一层层还原回去） */
+  /** where a point in its own coordinates lands in the world (undoing the bob, lean, and heading layer by layer) */
   function toWorld(b: V3, bob: number, roll: number): V3 {
     const cr = Math.cos(roll);
     const sr = Math.sin(roll);
@@ -521,7 +528,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
   const loop = (ms: number) => {
     raf = 0;
     if (destroyed || !visible || document.hidden) return;
-    // 连着几十帧都慢，就把照片的分辨率降一档
+    // if dozens of frames in a row run slow, drop the photo resolution a notch
     if (lastFrame) {
       slow = ms - lastFrame > 30 ? slow + 1 : Math.max(0, slow - 1);
       if (slow > 40 && quality > 0.3) {
@@ -560,7 +567,7 @@ export function mountOtter(host: HTMLElement, canvas: HTMLCanvasElement, opts: O
     const hit = toWater(x, y);
     if (!hit) return;
     const t = performance.now() / 1000;
-    // 点在它身上：掂一下石头；点在水上：起一圈涟漪
+    // click on it: toss the stone; click on the water: raise a ripple
     const bx = Math.cos(YAW) * hit[0] + Math.sin(YAW) * hit[1];
     const bz = -Math.sin(YAW) * hit[0] + Math.cos(YAW) * hit[1];
     if (Math.hypot((bx + 0.1) / 1.15, bz / 0.5) < 1) startToss(t);

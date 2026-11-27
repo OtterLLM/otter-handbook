@@ -1,0 +1,12 @@
+---
+/** Shown on a page whose content only exists in the other language. */
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<p class="notice label" role="note">{t(lang).common.fallbackNotice}</p>

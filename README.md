@@ -1,104 +1,110 @@
-# otter · 小模型训练手册
+# otter: a handbook on training small models
 
-自己踩过的坑，别人走通的路。一本记录训练小模型经验的开源手册：第一手观察，加上文献里可复用的结论，按模型结构从分词器一路组织到量化部署。
+**English** | [简体中文](README.zh-CN.md)
 
-在线阅读：<https://otterllm.github.io/otter-handbook/>
+Pitfalls we stepped in, and paths others have already cleared. An open-source handbook of small-model training experience: first-hand observations plus reusable conclusions from the literature, organized by model component from the tokenizer all the way to quantized deployment.
 
-## 跑起来
+Read online: <https://otterllm.github.io/otter-handbook/>
 
-需要 Node.js 22.22 或更新版本。
+## Running it
+
+Requires Node.js 22.22 or newer.
 
 ```bash
 npm install
 npm run dev      # http://localhost:4321
-npm run build    # 输出到 dist/，纯静态
+npm run build    # outputs to dist/, fully static
 ```
 
-推送到 `main` 之后，`.github/workflows/deploy.yml` 会自动构建并发布到 GitHub Pages，一两分钟后生效。
+After a push to `main`, `.github/workflows/deploy.yml` builds and publishes to GitHub Pages automatically; it goes live in a minute or two.
 
-## 怎么写
+## How to write
 
-| 写什么 | 放在哪 | 说明 |
+### Bilingual layout
+
+English is the default language and the site lives at `/`; the Chinese mirror lives at `/zh/`, with a language switch in the header. Chapters and notes each have one file per language, in `en/` and `zh/`, with the same filename. If a translation is missing, the site falls back to the other language's version and shows a notice on the page. UI strings (buttons, labels, notices) live in the i18n dictionary under `src/i18n/`.
+
+| What | Where | Notes |
 | --- | --- | --- |
-| 手册章节 | `src/content/handbook/NN-*.md` | 在第二个 `---` 下面写正文；同时把 `status` 改成 `draft` / `review` / `stable`，并更新 `progress`（0–1） |
-| 观察 / 笔记 | `src/content/notes/*.md` | 新建文件；`kind` 选 `obs` `lit` `recipe` `pitfall` `open` 之一，`components` 填相关章节 id |
-| 文献 | `src/data/papers.yaml` | 一条一篇，`components` 填章节 id，会自动挂到对应章节下 |
+| Handbook chapter | `src/content/handbook/en/NN-*.md` and `src/content/handbook/zh/NN-*.md` (same filename) | Write the body below the second `---`; also set `status` to `draft` / `review` / `stable` and update `progress` (0-1) |
+| Observation / note | `src/content/notes/en/*.md` and `src/content/notes/zh/*.md` (same filename) | Create a new file; pick `kind` from `obs` `lit` `recipe` `pitfall` `open`, and put the related chapter ids in `components` |
+| Paper | `src/data/papers.yaml` | One entry per paper; `components` takes chapter ids and the entry is attached to those chapters automatically. The one-line conclusion goes in `takeaway` (English) and `takeaway_zh` (Chinese) |
 
-章节 id 就是去掉序号的文件名：`tokenizer` `embedding` `position` `normalization` `attention` `ffn` `residual` `loop` `head` `data` `objective` `optimizer` `schedule` `regularization` `initialization` `evaluation` `distillation` `quantization` `inference`。
+A chapter id is its filename without the number: `tokenizer` `embedding` `position` `normalization` `attention` `ffn` `residual` `loop` `head` `data` `objective` `optimizer` `schedule` `regularization` `initialization` `evaluation` `distillation` `quantization` `inference`.
 
-正文里可以用五种标注块：
+The body supports five callout types:
 
 ```markdown
-:::obs[标题写成一个可以被推翻的句子]
-设置 → 现象 → 证据 → 可能的解释
+:::obs[Write the title as a sentence that can be refuted]
+Setup → phenomenon → evidence → possible explanation
 :::
 ```
 
-把 `obs` 换成 `lit`（文献）、`recipe`（配方）、`pitfall`（坑）、`open`（存疑）即可。现有的三条笔记和 `attention` 一章是排版示例（笔记标了 `sample: true`），写了真内容之后删掉。
+Swap `obs` for `lit` (literature), `recipe`, `pitfall`, or `open` (open question). The three existing notes and the `attention` chapter are typesetting samples (the notes are marked `sample: true`); delete them once you have written real content.
 
-### 图片、公式和其他写法
+### Images, equations, and other syntax
 
 ```markdown
-![warmup 太短时的 loss 曲线](./img/warmup-loss.png "图注：前 2k 步出现尖峰，之后与基线持平。")
+![Loss curve with too short a warmup](../img/warmup-loss.png "Caption: a spike in the first 2k steps, then level with the baseline.")
 
-行内公式 $\mathcal{L} = -\sum_i \log p_\theta(x_i)$，块级公式：
+Inline math $\mathcal{L} = -\sum_i \log p_\theta(x_i)$, and display math:
 
 $$
 \theta_t = \theta_{t-1} - \eta \, \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}
 $$
 
-站内链接直接从根路径写：[注意力一章](/handbook/attention/)
+Internal links start from the root path: [the attention chapter](/handbook/attention/)
 
 <details>
-<summary>完整训练配置</summary>
+<summary>Full training config</summary>
 
-放长日志、完整配置、推导细节，默认折叠。
+Put long logs, full configs, and derivation details here; collapsed by default.
 
 </details>
 ```
 
-- **图片**放在 Markdown 文件旁边的 `img/` 文件夹里（如 `src/content/notes/img/`），用 `./img/文件名` 引用。构建时会自动压缩成 webp。单独成段的图片按正文宽度居中显示；引号里的文字是图注，带图注的图会自动编号为 FIG. 01、02 等。
-- **公式**用 KaTeX，在构建时渲染，支持 `aligned`、`cases` 等环境。
-- **站内链接和 `public/` 里的文件**都从 `/` 开始写，部署到 GitHub Pages 时会自动补上 `/otter-handbook/`（见 `src/lib/markdown/base-path.mjs`）。
-- 也支持表格、代码高亮、脚注 `[^1]`、任务列表 `- [x]`、删除线 `~~…~~`，以及 `<details>`、`<video>` 等原生 HTML。
-- **不支持的**：Mermaid 流程图（只会当成代码显示），以及在 HTML 标签里用 `./` 相对路径引用图片（要插图请用 Markdown 的 `![]()` 写法）。
+- **Images** go in the shared `img/` folder (`src/content/handbook/img/` for chapters, `src/content/notes/img/` for notes) and are referenced as `../img/<file>` from both the English and Chinese versions. They are compressed to webp at build time. An image alone in its paragraph is centered at body width; the quoted text is the caption, and captioned images are numbered automatically as FIG. 01, 02, and so on.
+- **Equations** use KaTeX, rendered at build time, and support environments such as `aligned` and `cases`.
+- **Internal links and files in `public/`** are written starting from `/`; when deployed to GitHub Pages, `/otter-handbook/` is prepended automatically (see `src/lib/markdown/base-path.mjs`). In files under `zh/`, links to site pages (`/handbook`, `/notes`, `/papers`, `/about`, `/lab`, `/`) also get `/zh` prepended automatically; images and other assets do not. On a page that falls back to the other language's text, these links still point to pages in the page's own language.
+- Also supported: tables, code highlighting, footnotes `[^1]`, task lists `- [x]`, strikethrough `~~...~~`, and native HTML such as `<details>` and `<video>`.
+- **Not supported**: Mermaid diagrams (shown as plain code), and referencing images by relative path such as `../img/` inside HTML tags (use Markdown's `![]()` syntax for figures).
 
-## 许可
+## License
 
-文字内容（`src/content/`、`src/data/`）采用 [CC BY 4.0](LICENSE-CONTENT)，代码采用 [MIT](LICENSE)。
+Text content (`src/content/`, `src/data/`) is licensed under [CC BY 4.0](LICENSE-CONTENT); code under [MIT](LICENSE).
 
-## 设计
+## Design
 
-整个站当成一张「印样」来做：纸、墨，外加一块克莱因蓝的专色版。
+The whole site is built as a "print proof": paper, ink, and one spot-color plate in Klein blue.
 
-- **封面是一段着色器。** 一只仰面漂着的海獭，抱着一块克莱因蓝的石头 —— 不是图片，是 `src/lib/otter/` 里用距离场捏出来、每一帧现算的：
-  先捏出「皮」，皮外面套一层薄壳，壳里是毛 —— 视线穿过这层壳的时候一小步一小步地问「这里有没有一根毛」，
-  所以毛是一根一根的，毛根暗、毛梢亮，轮廓是绒的；眼睛周围和嘴上的毛剪得很短。头上的毛是干的、蓬的，身上的是湿的、一绺一绺的。
-  造型是照着海獭捏的：又宽又扁的头（不是球）、一整块往前鼓的口鼻、又宽又黑的鼻子、长在头两侧的小耳朵、
-  没有脖子的长身子、扇形的脚蹼和一片扁尾巴；头和朝天的胸口、肚子是浅色的，两侧和四肢是深的。
-  它抬着头看自己肚子上的石头，镜头在它斜上方。
-  算出来的「照片」再分成黑、蓝两块版，各自套一层转了角度的网点（黑 45°、蓝 15°）印到纸面上。
-  它有一副简单的骨架：头从脖子根上转，带一点惯性，胡须比头慢半拍；前肢两节骨头长度固定；
-  石头是刚体，掂的时候真的离手、翻一圈、再落回爪子里。它会看着你的指针；点一下水面会起涟漪；点它，它会掂两下石头。
-- **四种印法。** 封面底下那排按钮：网点、字符、有序抖动，或者不印、直接看原片。`/lab/` 是只有它的试片台（地址后面加 `?mode=photo&zoom=3&x=0.3&y=1.3` 可以凑近了看某一处）。
-- **地图。** `src/components/Atlas.astro`：一张 SVG 架构图，token 沿主干往上流，梯度沿虚线绕回去；
-  每个框是一章，指针移上去，右边的面板显示那一章的分类、进度，和一张会动的小图（`src/lib/figs.ts`，十九张）。
-- **目录。** 指针划过某一行，旁边会跟着那一章的小图；点进去，标题是从目录那一行「长」到章节页上的（跨页面的视图过渡）。
-- **章节页。** 左边是标出当前位置的小地图，中间是正文，右边是跟着滚动高亮的本页目录。
-- 明暗两套主题；窄屏有单独的排法；系统设了「减少动态效果」的时候，动画都停在一帧上。
+- **The cover is a shader.** A sea otter floating on its back, hugging a Klein-blue stone. Not an image: it is sculpted from distance fields in `src/lib/otter/` and computed fresh every frame.
+  First comes the "skin", then a thin shell wrapped around it, and the fur lives inside the shell. As the view ray passes through the shell it asks, in small steps, "is there a hair here?", so the fur is built strand by strand, dark at the root, bright at the tip, with a fuzzy silhouette. The fur around the eyes and on the mouth is clipped short. The fur on the head is dry and fluffy; on the body it is wet and clumped into locks.
+  The form follows a real otter: a broad, flat head (not a sphere), a muzzle that bulges forward as one block, a wide black nose, small ears on the sides of the head, a long neck-less body, fan-shaped flippers and a flat tail. The head, the upward-facing chest and the belly are pale; the sides and limbs are dark.
+  It lifts its head to look at the stone on its belly, and the camera sits obliquely above.
+  The computed "photo" is then split into a black plate and a blue plate, each overlaid with a rotated halftone screen (black at 45°, blue at 15°) and printed onto the paper.
+  It has a simple skeleton: the head turns from the base of the neck with a bit of inertia, and the whiskers lag the head by half a beat; the two bones of each forelimb keep fixed lengths; the stone is a rigid body that really leaves the paw when it tosses it, flips once, and lands back in the paw. It watches your pointer; click the water and ripples spread; click the otter and it tosses the stone twice.
+- **Four ways to print.** The row of buttons under the cover: halftone, characters, ordered dither, or no printing at all and just the original photo. `/lab/` is a test bench with only the otter (add `?mode=photo&zoom=3&x=0.3&y=1.3` to the address to zoom in on a spot).
+- **The map.** `src/components/Atlas.astro`: an SVG architecture diagram where tokens flow up the main trunk and gradients loop back along the dashed lines. Each box is a chapter; hover it and the panel on the right shows that chapter's categories, its progress, and a small animated figure (`src/lib/figs.ts`, nineteen of them).
+- **The table of contents.** As the pointer sweeps over a row, that chapter's small figure follows beside it; click in, and the title "grows" from the contents row to the chapter page (a cross-page view transition).
+- **Chapter pages.** On the left, a minimap marking where you are; in the middle, the text; on the right, an on-page outline that highlights as you scroll.
+- Light and dark themes; a separate layout for narrow screens; when the system asks for "reduce motion", every animation rests on a single frame.
 
-## 目录
+## Layout
 
 ```text
 src/
-├── lib/otter/shaders.ts    两段着色器：「照相机」（光线步进 + 毛层）和「印刷机」（分色 + 网点 + 胡须）
-├── lib/otter/renderer.ts   WebGL2：骨架与动作、镜头、指针、涟漪、明暗主题、暂停与降级
-├── lib/figs.ts             十九张会动的小图
-├── components/Hero.astro   封面
-├── components/Atlas.astro  架构图 + 检视面板
-├── components/ChapterList.astro  目录
-├── styles/                 base（设计系统）· hero · atlas · home · inner · prose
-└── pages/                  首页 / 手册 / 观察 / 文献 / 关于 / 404 / lab
+├── lib/otter/shaders.ts    two shaders: the "camera" (ray marching + fur shells) and the "press" (color separation + halftone + whiskers)
+├── lib/otter/renderer.ts   WebGL2: skeleton and motion, camera, pointer, ripples, light/dark theme, pause and fallback
+├── lib/figs.ts             nineteen small animated figures
+├── components/Hero.astro   the cover
+├── components/Atlas.astro  architecture diagram + inspector panel
+├── components/ChapterList.astro  table of contents
+├── content/handbook/       en/ and zh/ chapters (same filenames) + shared img/
+├── content/notes/          en/ and zh/ notes (same filenames) + shared img/
+├── data/papers.yaml        literature library (takeaway / takeaway_zh)
+├── i18n/                   UI-string dictionary
+├── styles/                 base (design system) · hero · atlas · home · inner · prose
+└── pages/                  home / handbook / notes / papers / about / 404 / lab
 ```
 
-没有 WebGL2 的浏览器只会少封面那张画，文字都在。
+In a browser without WebGL2 you only lose the cover painting; all the text is still there.

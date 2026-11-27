@@ -1,0 +1,165 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/hero.css';
+import '../../styles/atlas.css';
+import '../../styles/home.css';
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import Atlas from '../../components/Atlas.astro';
+import ChapterList from '../../components/ChapterList.astro';
+import { contentLangAttr, fmtDate, getChapters, getNotes, pad2 } from '../../lib/handbook';
+import { kinds, site } from '../../site.config';
+import { getOffmap } from '../../data/offmap';
+import { url } from '../../lib/url';
+import { getLang, langParams, t } from '../../i18n';
+
+export function getStaticPaths() {
+  return langParams();
+}
+
+const lang = getLang(Astro.params.lang);
+const text = t(lang);
+const offmap = getOffmap(lang);
+const chapters = await getChapters(lang);
+const notes = await getNotes(lang);
+const papers = await getCollection('papers');
+---
+
+<Base lang={lang}>
+  <Hero lang={lang} chapters={chapters.length} notes={notes.length} papers={papers.length} latest={notes[0]?.data.date} />
+
+  {/* ── 01 atlas ─────────────────────────────────────────────── */}
+  <section class="band" id="atlas">
+    <div class="wrap pad">
+      <header class="sh reveal">
+        <div>
+          <p class="sh-no"><b class="dots">01</b><span class="label">Atlas · Fig. 1</span></p>
+          <h2>{text.home.atlasTitle}</h2>
+        </div>
+        <p class="sh-lead">{text.home.atlasLead}</p>
+      </header>
+
+      <div class="reveal"><Atlas lang={lang} /></div>
+
+      <div class="offmap-head reveal">
+        <h3>{text.home.offmapTitle}</h3>
+        <p class="label">{text.home.offmapLabel}</p>
+      </div>
+      <ol class="offmap reveal">
+        {
+          offmap.map((o, i) => {
+            const c = chapters.find((ch) => ch.id === o.chapter)!;
+            return (
+              <li>
+                <a href={url(`/handbook/${c.id}/`, lang)}>
+                  <span class="label">{pad2(i + 1)}</span>
+                  <h4>{o.title}</h4>
+                  <p>{o.text}</p>
+                  <span class="label to">→ {pad2(c.data.order)} <span lang={c.fallback ? contentLangAttr(c.contentLang) : undefined}>{c.data.title}</span></span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ── 02 table of contents ─────────────────────────────────────────────── */}
+  <section class="band" id="contents">
+    <div class="wrap pad">
+      <header class="sh reveal">
+        <div>
+          <p class="sh-no"><b class="dots">02</b><span class="label">Contents</span></p>
+          <h2>{text.home.contentsTitle}</h2>
+        </div>
+        <p class="sh-lead">{text.home.contentsLead}</p>
+      </header>
+      <ChapterList lang={lang} chapters={chapters} />
+    </div>
+  </section>
+
+  {/* ── 03 notes ─────────────────────────────────────────────── */}
+  <section class="band" id="notes">
+    <div class="wrap pad">
+      <header class="sh reveal">
+        <div>
+          <p class="sh-no"><b class="dots">03</b><span class="label">Field notes</span></p>
+          <h2>{text.home.notesTitle}</h2>
+        </div>
+        <p class="sh-lead">{text.home.notesLead}</p>
+      </header>
+      <ol class="notes reveal">
+        {
+          notes.slice(0, 4).map((n) => (
+            <li>
+              <a class="note" href={url(`/notes/${n.id}/`, lang)}>
+                <time datetime={fmtDate(n.data.date)}>{fmtDate(n.data.date)}</time>
+                <span class="kind" data-kind={n.data.kind}>
+                  {kinds[n.data.kind].mark} {text.kinds[n.data.kind].label}
+                </span>
+                <div>
+                  <h3>
+                    <span lang={n.fallback ? contentLangAttr(n.contentLang) : undefined}>{n.data.title}</span>
+                    {n.data.sample && <span class="note-sample">{text.common.sample}</span>}
+                    {n.data.draft && <span class="note-sample">{text.common.draft}</span>}
+                    {n.fallback && <span class="note-sample">{text.common.fallbackTag}</span>}
+                  </h3>
+                  {n.data.summary && <p lang={n.fallback ? contentLangAttr(n.contentLang) : undefined}>{n.data.summary}</p>}
+                </div>
+                <span class="row-arr" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ── 04 callouts ─────────────────────────────────────────────── */}
+  <section class="band" id="kinds">
+    <div class="wrap pad">
+      <header class="sh reveal">
+        <div>
+          <p class="sh-no"><b class="dots">04</b><span class="label">Legend</span></p>
+          <h2>{text.home.legendTitle}</h2>
+        </div>
+        <p class="sh-lead">{text.home.legendLead}</p>
+      </header>
+      <ul class="kinds reveal">
+        {
+          (Object.entries(kinds) as [keyof typeof kinds, (typeof kinds)[keyof typeof kinds]][]).map(([key, k]) => (
+            <li data-kind={key}>
+              <span class="mark" aria-hidden="true">{k.mark}</span>
+              <h3>
+                {text.kinds[key].label}
+                <span>{k.en}</span>
+              </h3>
+              <p>{text.kinds[key].desc}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ── outro ────────────────────────────────────────────────── */}
+  <section class="band">
+    <div class="wrap pad outro reveal">
+      <h2>{text.home.outroTitle}<br /><em>{text.home.outroEm}</em></h2>
+      <div>
+        <p>{text.home.outroText}</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href={url('/handbook/', lang)}>
+            {text.home.outroStart}
+            <span class="arr">→</span>
+          </a>
+          <a class="btn" href={site.repo} rel="noopener">
+            GitHub
+            <span class="arr">↗</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

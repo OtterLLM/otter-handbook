@@ -1,6 +1,7 @@
 /* ───────────────────────────────────────────────────────────────
-   封面
-   一整屏：画布铺在最底下，文字压在左边，底下一条「印刷说明」。
+   the cover
+   One full screen: the canvas fills the bottom layer, text sits on top to the left, and a
+   "printing notice" runs along the bottom.
    ─────────────────────────────────────────────────────────────── */
 
 .hero {
@@ -16,7 +17,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  /* 画布一开始是空的：等第一帧画好再淡进来 */
+  /* the canvas starts empty: fade in once the first frame is drawn */
   opacity: 0;
   transition: opacity 1.2s var(--ease-out) 0.15s;
 }
@@ -35,7 +36,7 @@
   right: 14px;
 }
 
-/* 文字不挡指针：这样在字上面点一下，水面照样起涟漪；链接和按钮例外 */
+/* text doesn't block the pointer: clicking on the text still ripples the water; links and buttons are the exception */
 .hero-wrap {
   position: relative;
   display: flex;
@@ -87,7 +88,7 @@
   line-height: 0;
 }
 
-/* 整个站里最大的一块克莱因蓝 */
+/* the single biggest patch of Klein blue on the whole site */
 .hero-word {
   display: inline-flex;
   margin-left: -0.05em;
@@ -99,7 +100,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* 五个字母一个接一个地从底下升上来 */
+  /* the five letters rise up from below, one after another */
   .js .hero-word span {
     display: inline-block;
     animation: rise 1.1s var(--ease-out) both;
@@ -182,7 +183,7 @@
   background: var(--ink);
 }
 
-/* ── 印刷说明：几章几条、怎么印、用了哪几块版 ─────────────── */
+/* ── printing notice: how many chapters and entries, how it's printed, which plates are used ─────────────── */
 
 .hero-foot {
   position: relative;
@@ -245,7 +246,7 @@
   white-space: nowrap;
 }
 
-/* 色标：黑版 100 / 50，蓝版 100 / 50 */
+/* color swatches: black plate 100 / 50, blue plate 100 / 50 */
 .swatches {
   display: flex;
   gap: 2px;
