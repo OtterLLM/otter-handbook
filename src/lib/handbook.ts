@@ -17,8 +17,6 @@ export interface Chapter {
   /** language the text is actually written in */
   contentLang: Lang;
   fallback: boolean;
-  /** Chinese title, if a zh entry exists (used as the subtitle on English pages) */
-  zhTitle?: string;
 }
 
 export interface Note {
@@ -55,7 +53,6 @@ function merge<E extends { id: string }>(en: E[], zh: E[], lang: Lang) {
 /** All chapters, sorted by order. Chapters missing in `lang` fall back to the other language. */
 export async function getChapters(lang: Lang): Promise<Chapter[]> {
   const [en, zh] = await Promise.all([getCollection('handbook'), getCollection('handbookZh')]);
-  const zhTitles = new Map(zh.map((e) => [e.id, e.data.title]));
   return merge<Entry>(en, zh, lang)
     .map(({ id, entry, contentLang, fallback }) => ({
       id,
@@ -64,18 +61,16 @@ export async function getChapters(lang: Lang): Promise<Chapter[]> {
       entry,
       contentLang,
       fallback,
-      zhTitle: zhTitles.get(id),
     }))
     .sort((a, b) => a.data.order - b.data.order);
 }
 
 /**
- * The small line under a chapter title: the English full name when the text is Chinese,
- * the Chinese title (tagged lang="zh-CN") when the text is English. May be absent.
+ * The small line under a chapter title: the English full name when the text is Chinese.
+ * English text has no subtitle, so English pages stay English only.
  */
 export function subtitle(c: Chapter): { text: string; lang?: string } | undefined {
-  if (c.contentLang === 'zh') return { text: c.data.en };
-  return c.zhTitle ? { text: c.zhTitle, lang: 'zh-CN' } : undefined;
+  return c.contentLang === 'zh' ? { text: c.data.en } : undefined;
 }
 
 /**

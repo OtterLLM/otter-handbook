@@ -14,7 +14,7 @@ const stripOrder = ({ entry }: { entry: string }) =>
 const handbookSchema = z.object({
     order: z.number().int(),
     part: z.enum(['model', 'training', 'after']),
-    /** Title, in the language of the folder the file is in (the zh title is also the subtitle on English pages) */
+    /** Title, in the language of the folder the file is in */
     title: z.string(),
     /** label drawn on the diagram: plain ASCII, all caps, as short as possible */
     label: z.string().regex(/^[A-Z0-9 \-]+$/),
